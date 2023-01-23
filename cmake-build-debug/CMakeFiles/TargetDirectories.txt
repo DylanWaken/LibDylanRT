@@ -1,0 +1,3 @@
+/home/dylan/CLionProjects/SimplePathTracer/cmake-build-debug/CMakeFiles/SimplePathTracer.dir
+/home/dylan/CLionProjects/SimplePathTracer/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/dylan/CLionProjects/SimplePathTracer/cmake-build-debug/CMakeFiles/rebuild_cache.dir
