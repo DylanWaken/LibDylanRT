@@ -13,19 +13,20 @@ using namespace dylanrt;
 int main(int argc, char** argv) {
     glutInit(&argc, argv);
 
-    TrigModel model = TrigModel("/media/dylan/DylanFiles/Resources/Models/Sphere/Sphere.glb");
+    TrigModel model = TrigModel("/media/dylan/DylanFiles/Resources/Models/car2/scene2.gltf");
+    reorientModel(&model);
 
     int resX = 1440;
     int resY = 960;
 
     EclipsePathO path = EclipsePathO(
-        make_float3(0, 0, -3),
+        make_float3(-4, 4, 4),
         make_float3(0, 0, 0),
-        make_float3(5, 0, 0),
-        make_float3(0, 5, 0),
-        1,
-        2*0.480,
-        2* 0.720,
+        make_float3(9.3, 0, 0),
+        make_float3(0, 9.3, 0),
+        0.7,
+        1*0.480,
+         1*0.720,
         resX,
         resY,
         0.01
@@ -50,6 +51,5 @@ int main(int argc, char** argv) {
     }
 
     tr.join();
-
     return 0;
 }

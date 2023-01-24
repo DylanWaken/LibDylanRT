@@ -22,6 +22,7 @@
 #define dot3d(a,b) (a.x*b.x + a.y*b.y + a.z*b.z)
 #define cross(a,b) (make_float3(a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x))
 #define normalize3d(a) (scale3d(a, 1/sqrtf(a.x*a.x + a.y*a.y + a.z*a.z)))
+#define hadamard3d(a,b) (make_float3(a.x*b.x, a.y*b.y, a.z*b.z))
 
 #define rotate3dx(a, angle) (make_float3( \
      1 * a.x + 0 * a.y + 0 * a.z \
@@ -74,12 +75,34 @@ namespace dylanrt {
         }
     };
 
+    struct PrimitiveLabel{
+        unsigned int PrimitiveID;
+        float3 max;
+        float3 min;
+        unsigned int begVertexIndex;
+        unsigned int endVertexIndex;
+        unsigned int begTriangleIndex;
+        unsigned int endTriangleIndex;
+    };
+
+    struct MeshLabel{
+        unsigned int MeshID;
+        unsigned int begPrimitiveIndex;
+        unsigned int endPrimitiveIndex;
+    };
+
     //store a minimal model (with no subcomponents, textures, etc. only vertices and triangles)
     struct TrigModel {
         //The vertices in Host memory
         float3* vertices;
         float3* normals;
         triangle* triangles;
+
+        PrimitiveLabel* primitives;
+        MeshLabel* meshes;
+
+        PrimitiveLabel* primitivesD;
+        MeshLabel* meshesD;
 
         //The vertices in Device memory
         float3* verticesD;

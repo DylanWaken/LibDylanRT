@@ -12,6 +12,7 @@
 
 #include <cuda_runtime.h>
 #include <iostream>
+#include "../Model/TrigModel.cuh"
 
 using namespace std;
 namespace dylanrt {
@@ -20,6 +21,8 @@ namespace dylanrt {
     extern void* PUBLIC_REDUCTION_BUFFER;
 
     __host__ void assertCudaError();
+
+    __host__ void reorientModel(TrigModel* model);
 
     float maxVal(float* imagePlane, int resolutionX, int resolutionY);
 

@@ -27,6 +27,7 @@ namespace dylanrt{
         //get the bottom right corner of the image plane
         imgBottomRight = add3d(planeCenter, scale3d(basisU, width / 2));
         imgBottomRight = subtract3d(imgBottomRight, scale3d(basisV, height / 2));
+
     }
 
      __host__ CameraFrame::CameraFrame(float3 directionW, float3 basisU, float3 basisV, float3 positionE,
@@ -60,7 +61,7 @@ namespace dylanrt{
 
 
         //first solve the default u vector with zero z component (cross w and z)
-        float3 defaultU = cross(directionW, make_float3(0, 0, 1));
+        float3 defaultU = cross(directionW, make_float3(0, 0, -1));
 
         //rotate the default u vector by the rotation angle on the z direction
         basisU = normalize3d(rotate3dz(defaultU, rotationAngleUV));
@@ -78,6 +79,7 @@ namespace dylanrt{
         float3 viewDir = subtract3d(pos, viewCenter);
 
         t += step;
+        t = fmodf(t, 2 * M_PI);
 
         //the new camera frame
         return CameraFrame(viewDir, pos, distanceD, topBottomTB, leftRightLR, resolutionX, resolutionY, 0);

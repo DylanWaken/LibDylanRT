@@ -36,6 +36,29 @@ namespace dylanrt {
         return val;
     }
 
+    __host__ void reorientModel(TrigModel* model){
+        for(int i = 0; i < model->numVertices; i++){
+            auto x = model->vertices[i].x;
+            auto y = model->vertices[i].y;
+            auto z = model->vertices[i].z;
+
+            model->vertices[i].x = x;
+            model->vertices[i].y = z;
+            model->vertices[i].z = -y;
+
+            x = model->normals[i].x;
+            y = model->normals[i].y;
+            z = model->normals[i].z;
+
+            model->normals[i].x = x;
+            model->normals[i].y = z;
+            model->normals[i].z = -y;
+        }
+
+        cudaMemcpy(model->verticesD, model->vertices, sizeof(float3) * model->numVertices, cudaMemcpyHostToDevice);
+        cudaMemcpy(model->normalsD, model->normals, sizeof(float3) * model->numVertices, cudaMemcpyHostToDevice);
+    }
+
     /**
      * Find the max value in the array A and store it in outA
      * This funtion need to be called recursively
