@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
         renderVertices(model.verticesD, model.numVertices, cam, imageD, resX * resY);
         createImage(imageD, pixelsD, resX, resY);
         glutPostRedisplay();
-        this_thread::sleep_for(chrono::milliseconds(1000/60));
+        //this_thread::sleep_for(chrono::milliseconds(1000/60));
         cudaFree(cam);
     }
 

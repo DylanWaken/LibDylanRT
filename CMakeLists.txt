@@ -8,6 +8,7 @@ project(SimplePathTracer CUDA CXX)
 
 set(CMAKE_CUDA_STANDARD 17)
 set(CMAKE_CXX_STANDARD 17)
+add_compile_options(--keep -Xptxas -v)
 
 add_executable(SimplePathTracer
         main.cu

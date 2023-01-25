@@ -51,37 +51,37 @@ build cmake_object_order_depends_target_SimplePathTracer: phony || CMakeFiles/Si
 
 build CMakeFiles/SimplePathTracer.dir/main.cu.o: CUDA_COMPILER__SimplePathTracer_Debug /home/dylan/CLionProjects/SimplePathTracer/main.cu || cmake_object_order_depends_target_SimplePathTracer
   DEP_FILE = CMakeFiles/SimplePathTracer.dir/main.cu.o.d
-  FLAGS = --generate-code=arch=compute_86,code=[compute_86,sm_86] -g -G
+  FLAGS = --generate-code=arch=compute_86,code=[compute_86,sm_86] -g -G --keep -Xptxas -v
   OBJECT_DIR = CMakeFiles/SimplePathTracer.dir
   OBJECT_FILE_DIR = CMakeFiles/SimplePathTracer.dir
 
 build CMakeFiles/SimplePathTracer.dir/Model/TrigModel.cu.o: CUDA_COMPILER__SimplePathTracer_Debug /home/dylan/CLionProjects/SimplePathTracer/Model/TrigModel.cu || cmake_object_order_depends_target_SimplePathTracer
   DEP_FILE = CMakeFiles/SimplePathTracer.dir/Model/TrigModel.cu.o.d
-  FLAGS = --generate-code=arch=compute_86,code=[compute_86,sm_86] -g -G
+  FLAGS = --generate-code=arch=compute_86,code=[compute_86,sm_86] -g -G --keep -Xptxas -v
   OBJECT_DIR = CMakeFiles/SimplePathTracer.dir
   OBJECT_FILE_DIR = CMakeFiles/SimplePathTracer.dir/Model
 
 build CMakeFiles/SimplePathTracer.dir/Renderer/VertexRenderer.cu.o: CUDA_COMPILER__SimplePathTracer_Debug /home/dylan/CLionProjects/SimplePathTracer/Renderer/VertexRenderer.cu || cmake_object_order_depends_target_SimplePathTracer
   DEP_FILE = CMakeFiles/SimplePathTracer.dir/Renderer/VertexRenderer.cu.o.d
-  FLAGS = --generate-code=arch=compute_86,code=[compute_86,sm_86] -g -G
+  FLAGS = --generate-code=arch=compute_86,code=[compute_86,sm_86] -g -G --keep -Xptxas -v
   OBJECT_DIR = CMakeFiles/SimplePathTracer.dir
   OBJECT_FILE_DIR = CMakeFiles/SimplePathTracer.dir/Renderer
 
 build CMakeFiles/SimplePathTracer.dir/Renderer/CameraFrame.cu.o: CUDA_COMPILER__SimplePathTracer_Debug /home/dylan/CLionProjects/SimplePathTracer/Renderer/CameraFrame.cu || cmake_object_order_depends_target_SimplePathTracer
   DEP_FILE = CMakeFiles/SimplePathTracer.dir/Renderer/CameraFrame.cu.o.d
-  FLAGS = --generate-code=arch=compute_86,code=[compute_86,sm_86] -g -G
+  FLAGS = --generate-code=arch=compute_86,code=[compute_86,sm_86] -g -G --keep -Xptxas -v
   OBJECT_DIR = CMakeFiles/SimplePathTracer.dir
   OBJECT_FILE_DIR = CMakeFiles/SimplePathTracer.dir/Renderer
 
 build CMakeFiles/SimplePathTracer.dir/Display/PixelDisplay.cu.o: CUDA_COMPILER__SimplePathTracer_Debug /home/dylan/CLionProjects/SimplePathTracer/Display/PixelDisplay.cu || cmake_object_order_depends_target_SimplePathTracer
   DEP_FILE = CMakeFiles/SimplePathTracer.dir/Display/PixelDisplay.cu.o.d
-  FLAGS = --generate-code=arch=compute_86,code=[compute_86,sm_86] -g -G
+  FLAGS = --generate-code=arch=compute_86,code=[compute_86,sm_86] -g -G --keep -Xptxas -v
   OBJECT_DIR = CMakeFiles/SimplePathTracer.dir
   OBJECT_FILE_DIR = CMakeFiles/SimplePathTracer.dir/Display
 
 build CMakeFiles/SimplePathTracer.dir/Renderer/UtilFunctions.cu.o: CUDA_COMPILER__SimplePathTracer_Debug /home/dylan/CLionProjects/SimplePathTracer/Renderer/UtilFunctions.cu || cmake_object_order_depends_target_SimplePathTracer
   DEP_FILE = CMakeFiles/SimplePathTracer.dir/Renderer/UtilFunctions.cu.o.d
-  FLAGS = --generate-code=arch=compute_86,code=[compute_86,sm_86] -g -G
+  FLAGS = --generate-code=arch=compute_86,code=[compute_86,sm_86] -g -G --keep -Xptxas -v
   OBJECT_DIR = CMakeFiles/SimplePathTracer.dir
   OBJECT_FILE_DIR = CMakeFiles/SimplePathTracer.dir/Renderer
 

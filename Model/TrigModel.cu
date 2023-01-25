@@ -118,9 +118,7 @@ namespace dylanrt {
                     normals[vertexProcIndex + i] = pos;
                 }
 
-
-                vertexProcIndex += numV0;
-                primitives[primitiveProcIndex].endVertexIndex = vertexProcIndex;
+                primitives[primitiveProcIndex].endVertexIndex = vertexProcIndex + numV0;
 
                 //load indices (triangle) data
                 const Accessor& indexAccess = model.accessors[primitive.indices];
@@ -128,13 +126,26 @@ namespace dylanrt {
                 auto numI0 = indexAccess.count;
 
                 const Buffer& indexBuffer = model.buffers[indexBufferView.buffer];
-                const auto* indices = reinterpret_cast<const unsigned short*>
-                        (&indexBuffer.data[indexBufferView.byteOffset + indexAccess.byteOffset]);
 
-                for(int i = 0; i < numI0; i+=3) {
-                    auto tri = triangle(make_ushort3(indices[i], indices[i+1], indices[i+2]));
-                    triangles[triangleProcIndex + i/3] = tri;
+                if(indexAccess.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT) {
+                    const auto* indices = reinterpret_cast<const unsigned int*>(&indexBuffer.data[indexBufferView.byteOffset + indexAccess.byteOffset]);
+                    for(int i = 0; i < numI0; i+=3) {
+                        auto tri = triangle(make_uint3(indices[i] + vertexProcIndex,
+                                                       indices[i+1] + vertexProcIndex, indices[i+2] + vertexProcIndex));
+                        triangles[triangleProcIndex + i/3] = tri;
+                    }
+                } else if(indexAccess.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT) {
+                    const auto* indices = reinterpret_cast<const unsigned short*>(&indexBuffer.data[indexBufferView.byteOffset + indexAccess.byteOffset]);
+                    for(int i = 0; i < numI0; i+=3) {
+                        auto tri = triangle(make_uint3((uint)indices[i] + vertexProcIndex,
+                                                       (uint)indices[i+1] + vertexProcIndex, (uint)indices[i+2] + vertexProcIndex));
+                        triangles[triangleProcIndex + i/3] = tri;
+                    }
+                } else {
+                    cerr << "Unsupported index component type" << endl;
                 }
+
+                vertexProcIndex += numV0;
                 triangleProcIndex += numI0 / 3;
                 primitives[primitiveProcIndex].endTriangleIndex = triangleProcIndex;
 

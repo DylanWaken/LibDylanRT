@@ -48,8 +48,14 @@ namespace dylanrt {
     void renderVertices(float3 *vertices, unsigned int numVertices, CameraFrame* cameraFrame,
                         float* imagePlane,  int pixelCount);
 
-    void renderEdges(float3 *vertices, triangle* trigs, unsigned int numVertices, CameraFrame* cameraFrame,
-                     float* imagePlane,  int pixelCount);
+    struct solvedTrig{
+        float3 scrPoint1;
+        float3 scrPoint2;
+        float3 scrPoint3;
+    };
+
+    void renderEdges(float3 *vertices, triangle* trigs, unsigned int numVertices, unsigned int numTrigs,
+                     CameraFrame* cameraFrame, float* imagePlane,  int pixelCount);
 
 } // dylanrt
 

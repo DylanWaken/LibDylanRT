@@ -49,11 +49,11 @@ namespace dylanrt {
 
     //standard triangles
     struct triangle {
-        ushort3 indices{};
+        uint3 indices{};
         float3 normal{};
 
         //a triangle defined by 3 vertices
-        __device__ __host__ triangle(ushort3 indices)
+        __device__ __host__ triangle(uint3 indices)
                 :indices(indices) {
         }
     };

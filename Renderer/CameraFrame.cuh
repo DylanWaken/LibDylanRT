@@ -58,6 +58,8 @@ namespace dylanrt {
         __host__ CameraFrame(float3 directionW0, float3 positionE, float distanceD,
                                         float topBottomTB, float leftRightLR, int resolutionX,
                                         int resolutionY, float rotationAngleUV);
+
+        __device__ __host__ CameraFrame() = default;
     };
 
     struct CameraPath{
