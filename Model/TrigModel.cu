@@ -7,34 +7,35 @@
 #include "TrigModel.cuh"
 #include "../Renderer/UtilFunctions.cuh"
 #include "TinyGLTF/tiny_gltf.h"
+#include <queue>
 
 using namespace tinygltf;
 namespace dylanrt {
 
-    __host__ float objMedianSplit(vector<size_t>& indices, triangle* trigs, float3* vertices, int dim){
+    __host__ float objMedianSplit(vector<uint32_t>* indices, triangle* trigs, float3* vertices, int dim, uint32_t beg, uint32_t end){
         if(dim == 0){
             //find the objective median
-            float objMedian = (vertices[trigs[indices[indices.size() / 2]].indices.x].x
-                               + vertices[trigs[indices[indices.size() / 2]].indices.y].x
-                               + vertices[trigs[indices[indices.size() / 2]].indices.z].x) / 3.0f;
+            float objMedian = (vertices[trigs[(*indices)[(end+beg) / 2]].indices.x].x
+                               + vertices[trigs[(*indices)[(end+beg) / 2]].indices.y].x
+                               + vertices[trigs[(*indices)[(end+beg) / 2]].indices.z].x) / 3.0f;
 
             return objMedian;
         }
 
         if(dim == 1){
             //find the objective median
-            float objMedian = (vertices[trigs[indices[indices.size() / 2]].indices.x].y
-                               + vertices[trigs[indices[indices.size() / 2]].indices.y].y
-                               + vertices[trigs[indices[indices.size() / 2]].indices.z].y) / 3.0f;
+            float objMedian = (vertices[trigs[(*indices)[(end+beg) / 2]].indices.x].y
+                               + vertices[trigs[(*indices)[(end+beg) / 2]].indices.y].y
+                               + vertices[trigs[(*indices)[(end+beg) / 2]].indices.z].y) / 3.0f;
 
             return objMedian;
         }
 
         if(dim == 2){
             //find the objective median
-            float objMedian = (vertices[trigs[indices[indices.size() / 2]].indices.x].z
-                               + vertices[trigs[indices[indices.size() / 2]].indices.y].z
-                               + vertices[trigs[indices[indices.size() / 2]].indices.z].z) / 3.0f;
+            float objMedian = (vertices[trigs[(*indices)[(end+beg) / 2]].indices.x].z
+                               + vertices[trigs[(*indices)[(end+beg) / 2]].indices.y].z
+                               + vertices[trigs[(*indices)[(end+beg) / 2]].indices.z].z) / 3.0f;
 
             return objMedian;
         }
@@ -66,30 +67,34 @@ namespace dylanrt {
         AABBNodeTemp* left{};
         AABBNodeTemp* right{};
         AABBNodeTemp* parent{};
-        vector<size_t>* indices{};
+        vector<uint32_t>* indices;
         triangle* trigs;
         float3* vertices;
         int* numNodes;
+
+        uint32_t indBegin = 0;
+        uint32_t indEnd = 0;
 
         float3 minPoint;
         float3 maxPoint;
 
         //if leaf
         bool isLeaf = false;
-        size_t trigIndex{};
+        uint32_t trigIndex{};
 
-        AABBNodeTemp(float3 max, float3 min, triangle* trig, float3* vertices, vector int* numNodes)
-                : maxPoint(max), minPoint(min), trigs(trig), vertices(vertices), numNodes(numNodes){}
+        AABBNodeTemp(float3 max, float3 min, triangle* trig, float3* vertices, vector<uint32_t>* indices, int* numNodes)
+                : maxPoint(max), minPoint(min), trigs(trig), vertices(vertices), numNodes(numNodes), indices(indices){}
 
         void build(){
-            assert(!indices.empty());
+            assert(indEnd > indBegin);
 
-            if(indices.size() == 1){
+            if(indEnd - indBegin == 1){
                 isLeaf = true;
-                trigIndex = indices[0];
+                trigIndex = (*indices)[indBegin];
             }
 
             else {
+
                 isLeaf = false;
                 //find the longest dimension
                 float3 dim = subtract3d(maxPoint, minPoint);
@@ -102,33 +107,33 @@ namespace dylanrt {
                     longestDim = 2;
                 }
 
-                //sort the indices according to the longest dimension
+                //partial sort the indices between indBegin and indEnd
                 if (longestDim == 0) {
-                    sort(indices.begin(), indices.end(), [this](size_t a, size_t b) {
-                        float3 centerA = getTrigCenter(trigs[a], vertices);
-                        float3 centerB = getTrigCenter(trigs[b], vertices);
-                        return centerA.x < centerB.x;
-                    });
+                    sort(indices->begin() + indBegin, indices->begin() + indEnd + 1,
+                         [this](uint32_t a, uint32_t b) {
+                             return (vertices[trigs[a].indices.x].x + vertices[trigs[a].indices.y].x + vertices[trigs[a].indices.z].x) / 3.0f
+                                    < (vertices[trigs[b].indices.x].x + vertices[trigs[b].indices.y].x + vertices[trigs[b].indices.z].x) / 3.0f;
+                         });
                 }
 
                 if (longestDim == 1) {
-                    sort(indices.begin(), indices.end(), [this](size_t a, size_t b) {
-                        float3 centerA = getTrigCenter(trigs[a], vertices);
-                        float3 centerB = getTrigCenter(trigs[b], vertices);
-                        return centerA.y < centerB.y;
-                    });
+                    sort(indices->begin() + indBegin, indices->begin() + indEnd + 1,
+                         [this](uint32_t a, uint32_t b) {
+                             return (vertices[trigs[a].indices.x].y + vertices[trigs[a].indices.y].y + vertices[trigs[a].indices.z].y) / 3.0f
+                                    < (vertices[trigs[b].indices.x].y + vertices[trigs[b].indices.y].y + vertices[trigs[b].indices.z].y) / 3.0f;
+                         });
                 }
 
                 if (longestDim == 2) {
-                    sort(indices.begin(), indices.end(), [this](size_t a, size_t b) {
-                        float3 centerA = getTrigCenter(trigs[a], vertices);
-                        float3 centerB = getTrigCenter(trigs[b], vertices);
-                        return centerA.z < centerB.z;
-                    });
+                    sort(indices->begin() + indBegin, indices->begin() + indEnd + 1,
+                         [this](uint32_t a, uint32_t b) {
+                             return (vertices[trigs[a].indices.x].z + vertices[trigs[a].indices.y].z + vertices[trigs[a].indices.z].z) / 3.0f
+                                    < (vertices[trigs[b].indices.x].z + vertices[trigs[b].indices.y].z + vertices[trigs[b].indices.z].z) / 3.0f;
+                         });
                 }
 
                 //find the objective median
-                float objMedian = objMedianSplit(indices, trigs, vertices, longestDim);
+                float objMedian = objMedianSplit(indices, trigs, vertices, longestDim, indBegin, indEnd);
 
                 //recompute the maxPoint minPoint for both sub nodes
                 if (longestDim == 0) {
@@ -146,42 +151,32 @@ namespace dylanrt {
                     left->trigs = trigs;
                     left->vertices = vertices;
                     left->numNodes = numNodes;
+                    left->indices = indices;
 
                     right->maxPoint = rightMax;
                     right->minPoint = rightMin;
                     right->trigs = trigs;
                     right->vertices = vertices;
                     right->numNodes = numNodes;
-
-                    vector<size_t> leftIndices;
-                    vector<size_t> rightIndices;
-                    left->indices = leftIndices;
-                    right->indices = rightIndices;
+                    right->indices = indices;
 
                     left->parent = this;
                     right->parent = this;
 
+                    uint32_t boarderInd = indBegin;
+
                     //split the indices
-                    for (int i = 0; i < indices.size(); ++i) {
-                        float3 trigCenter = getTrigCenter(trigs[indices[i]], vertices);
-                        if (trigCenter.x < objMedian && left->indices.size() < indices.size()-1) {
-                            left->indices.push_back(indices[i]);
-                        } else {
-                            if(left->indices.empty()){
-                                left->indices.push_back(indices[i]);
-                                continue;
-                            }
-                            right->indices.push_back(indices[i]);
+                    for (auto i = indBegin; i < indEnd; ++i) {
+                        float3 trigCenter = getTrigCenter(trigs[(*indices)[i]], vertices);
+                        if ((trigCenter.x < objMedian || boarderInd == indBegin)&&(boarderInd < indEnd-1)) {
+                            boarderInd++;
                         }
                     }
 
-                    assert(!left->indices.empty());
-                    assert(!right->indices.empty());
-
                     //calibrate minPoint maxPoint of the children
-                    for (auto ind: left->indices) {
-                        float3 trigMin = getTrigMin(trigs[ind], vertices);
-                        float3 trigMax = getTrigMax(trigs[ind], vertices);
+                    for (auto i = indBegin; i < boarderInd; ++i) {
+                        float3 trigMin = getTrigMin(trigs[(*indices)[i]], vertices);
+                        float3 trigMax = getTrigMax(trigs[(*indices)[i]], vertices);
 
                         left->minPoint.x = min(left->minPoint.x, trigMin.x);
                         left->minPoint.y = min(left->minPoint.y, trigMin.y);
@@ -192,9 +187,9 @@ namespace dylanrt {
                         left->maxPoint.z = max(left->maxPoint.z, trigMax.z);
                     }
 
-                    for (auto ind: right->indices) {
-                        float3 trigMin = getTrigMin(trigs[ind], vertices);
-                        float3 trigMax = getTrigMax(trigs[ind], vertices);
+                    for (auto i = boarderInd; i < indEnd; ++i) {
+                        float3 trigMin = getTrigMin(trigs[(*indices)[i]], vertices);
+                        float3 trigMax = getTrigMax(trigs[(*indices)[i]], vertices);
 
                         right->minPoint.x = min(right->minPoint.x, trigMin.x);
                         right->minPoint.y = min(right->minPoint.y, trigMin.y);
@@ -205,15 +200,19 @@ namespace dylanrt {
                         right->maxPoint.z = max(right->maxPoint.z, trigMax.z);
                     }
 
+                    left->indBegin = indBegin;
+                    left->indEnd = boarderInd;
+                    right->indBegin = boarderInd;
+                    right->indEnd = indEnd;
+
                     numNodes[0] += 2;
-                    indices.clear();
 
                     //build the children
                     left->build();
                     right->build();
                 }
 
-                if (longestDim == 1){
+                if (longestDim == 1) {
                     float3 leftMax = make_float3(maxPoint.x, objMedian, maxPoint.z);
                     float3 leftMin = make_float3(minPoint.x, minPoint.y, minPoint.z);
 
@@ -228,42 +227,32 @@ namespace dylanrt {
                     left->trigs = trigs;
                     left->vertices = vertices;
                     left->numNodes = numNodes;
+                    left->indices = indices;
 
                     right->maxPoint = rightMax;
                     right->minPoint = rightMin;
                     right->trigs = trigs;
                     right->vertices = vertices;
                     right->numNodes = numNodes;
-
-                    vector<size_t> leftIndices;
-                    vector<size_t> rightIndices;
-                    left->indices = leftIndices;
-                    right->indices = rightIndices;
+                    right->indices = indices;
 
                     left->parent = this;
                     right->parent = this;
 
+                    uint32_t boarderInd = indBegin;
+
                     //split the indices
-                    for (int i = 0; i < indices.size(); ++i) {
-                        float3 trigCenter = getTrigCenter(trigs[indices[i]], vertices);
-                        if (trigCenter.y <= objMedian && left->indices.size() < indices.size()-1) {
-                            left->indices.push_back(indices[i]);
-                        } else {
-                            if(left->indices.empty()){
-                                left->indices.push_back(indices[i]);
-                                continue;
-                            }
-                            right->indices.push_back(indices[i]);
+                    for (auto i = indBegin; i < indEnd; ++i) {
+                        float3 trigCenter = getTrigCenter(trigs[(*indices)[i]], vertices);
+                        if ((trigCenter.y < objMedian || boarderInd == indBegin) && (boarderInd < indEnd - 1)) {
+                            boarderInd++;
                         }
                     }
 
-                    assert(!left->indices.empty());
-                    assert(!right->indices.empty());
-
                     //calibrate minPoint maxPoint of the children
-                    for (auto ind: left->indices) {
-                        float3 trigMin = getTrigMin(trigs[ind], vertices);
-                        float3 trigMax = getTrigMax(trigs[ind], vertices);
+                    for (auto i = indBegin; i < boarderInd; ++i) {
+                        float3 trigMin = getTrigMin(trigs[(*indices)[i]], vertices);
+                        float3 trigMax = getTrigMax(trigs[(*indices)[i]], vertices);
 
                         left->minPoint.x = min(left->minPoint.x, trigMin.x);
                         left->minPoint.y = min(left->minPoint.y, trigMin.y);
@@ -274,9 +263,9 @@ namespace dylanrt {
                         left->maxPoint.z = max(left->maxPoint.z, trigMax.z);
                     }
 
-                    for (auto ind: right->indices) {
-                        float3 trigMin = getTrigMin(trigs[ind], vertices);
-                        float3 trigMax = getTrigMax(trigs[ind], vertices);
+                    for (auto i = boarderInd; i < indEnd; ++i) {
+                        float3 trigMin = getTrigMin(trigs[(*indices)[i]], vertices);
+                        float3 trigMax = getTrigMax(trigs[(*indices)[i]], vertices);
 
                         right->minPoint.x = min(right->minPoint.x, trigMin.x);
                         right->minPoint.y = min(right->minPoint.y, trigMin.y);
@@ -287,16 +276,19 @@ namespace dylanrt {
                         right->maxPoint.z = max(right->maxPoint.z, trigMax.z);
                     }
 
-                    numNodes[0] += 2;
-                    //build the children
-                    indices.clear();
+                    left->indBegin = indBegin;
+                    left->indEnd = boarderInd;
+                    right->indBegin = boarderInd;
+                    right->indEnd = indEnd;
 
+                    numNodes[0] += 2;
+
+                    //build the children
                     left->build();
                     right->build();
-
                 }
 
-                if(longestDim == 2){
+                if (longestDim == 2) {
                     float3 leftMax = make_float3(maxPoint.x, maxPoint.y, objMedian);
                     float3 leftMin = make_float3(minPoint.x, minPoint.y, minPoint.z);
 
@@ -311,43 +303,32 @@ namespace dylanrt {
                     left->trigs = trigs;
                     left->vertices = vertices;
                     left->numNodes = numNodes;
+                    left->indices = indices;
 
                     right->maxPoint = rightMax;
                     right->minPoint = rightMin;
                     right->trigs = trigs;
                     right->vertices = vertices;
                     right->numNodes = numNodes;
-
-                    vector<size_t> leftIndices;
-                    vector<size_t> rightIndices;
-                    left->indices = leftIndices;
-                    right->indices = rightIndices;
+                    right->indices = indices;
 
                     left->parent = this;
                     right->parent = this;
 
+                    uint32_t boarderInd = indBegin;
+
                     //split the indices
-                    for (int i = 0; i < indices.size(); ++i) {
-                        float3 trigCenter = getTrigCenter(trigs[indices[i]], vertices);
-                        if (trigCenter.z <= objMedian && left->indices.size() < indices.size()-1) {
-                            left->indices.push_back(indices[i]);
-                        } else {
-                            if(left->indices.empty()){
-                                left->indices.push_back(indices[i]);
-                                continue;
-                            }
-                            right->indices.push_back(indices[i]);
+                    for (auto i = indBegin; i < indEnd; ++i) {
+                        float3 trigCenter = getTrigCenter(trigs[(*indices)[i]], vertices);
+                        if ((trigCenter.z < objMedian || boarderInd == indBegin) && (boarderInd < indEnd - 1)) {
+                            boarderInd++;
                         }
                     }
 
-
-                    assert(!left->indices.empty());
-                    assert(!right->indices.empty());
-
                     //calibrate minPoint maxPoint of the children
-                    for (auto ind: left->indices) {
-                        float3 trigMin = getTrigMin(trigs[ind], vertices);
-                        float3 trigMax = getTrigMax(trigs[ind], vertices);
+                    for (auto i = indBegin; i < boarderInd; ++i) {
+                        float3 trigMin = getTrigMin(trigs[(*indices)[i]], vertices);
+                        float3 trigMax = getTrigMax(trigs[(*indices)[i]], vertices);
 
                         left->minPoint.x = min(left->minPoint.x, trigMin.x);
                         left->minPoint.y = min(left->minPoint.y, trigMin.y);
@@ -358,9 +339,9 @@ namespace dylanrt {
                         left->maxPoint.z = max(left->maxPoint.z, trigMax.z);
                     }
 
-                    for (auto ind: right->indices) {
-                        float3 trigMin = getTrigMin(trigs[ind], vertices);
-                        float3 trigMax = getTrigMax(trigs[ind], vertices);
+                    for (auto i = boarderInd; i < indEnd; ++i) {
+                        float3 trigMin = getTrigMin(trigs[(*indices)[i]], vertices);
+                        float3 trigMax = getTrigMax(trigs[(*indices)[i]], vertices);
 
                         right->minPoint.x = min(right->minPoint.x, trigMin.x);
                         right->minPoint.y = min(right->minPoint.y, trigMin.y);
@@ -370,8 +351,13 @@ namespace dylanrt {
                         right->maxPoint.y = max(right->maxPoint.y, trigMax.y);
                         right->maxPoint.z = max(right->maxPoint.z, trigMax.z);
                     }
+
+                    left->indBegin = indBegin;
+                    left->indEnd = boarderInd;
+                    right->indBegin = boarderInd;
+                    right->indEnd = indEnd;
+
                     numNodes[0] += 2;
-                    indices.clear();
 
                     //build the children
                     left->build();
@@ -381,11 +367,11 @@ namespace dylanrt {
         }
     };
 
-    void buildAABBTree(AABBTree& tree, triangle* trigs, size_t numTrigs,
-                       float3* vertices, size_t numVertices){
+    void buildAABBTree(AABBTree& tree, triangle* trigs, uint32_t numTrigs,
+                       float3* vertices, uint32_t numVertices){
 
         //initialize the array of trig indices
-        vector<size_t> trigIndices(numTrigs);
+        vector<uint32_t> trigIndices(numTrigs);
         for (int i = 0; i < numTrigs; ++i) {
             trigIndices[i] = i;
         }
@@ -405,14 +391,56 @@ namespace dylanrt {
         }
 
         int numNodes = 0;
-        auto root = new AABBNodeTemp(max, min, trigs, vertices, &numNodes);
+        auto root = new AABBNodeTemp(max, min, trigs, vertices, &trigIndices, &numNodes);
+        root->indBegin = 0;
+        root->indEnd = numTrigs;
 
-        int count = 0;
+        unsigned int count = 0;
 
-        for (auto ind: trigIndices) {
-            root->indices.push_back(ind);
-        }
+        //This is a temporary tree that are used to construct the data structure
+        //since the entire tree need to be copied into device memory all pointer connections would fail
         root->build();
+
+        //do a BFS to generate the actual tree
+        cudaMallocHost(&tree.nodes, sizeof(AABBnode) * numNodes);
+
+        queue<AABBNodeTemp*> currentLayer;
+        queue<AABBNodeTemp*> nextLayer;
+        currentLayer.push(root);
+
+        while(count < numNodes){
+            auto tmpCount = count;
+            count += currentLayer.size();
+            auto nxtCount = count;
+            auto size = currentLayer.size();
+            cout << "count: " << count << " layerSize" << size << endl;
+            for(unsigned int ind = 0; ind < size; ind++){
+                AABBNodeTemp* node = currentLayer.front();
+                currentLayer.pop();
+
+                tree.nodes[tmpCount + ind].minPoint = node->minPoint;
+                tree.nodes[tmpCount + ind].maxPoint = node->maxPoint;
+                tree.nodes[tmpCount + ind].isLeaf = node->isLeaf;
+                tree.nodes[tmpCount + ind].trigIndex = node->trigIndex;
+
+                if(node->left != nullptr){
+                    tree.nodes[tmpCount + ind].left = nxtCount;
+                    nextLayer.push(node->left);
+                    nxtCount++;
+                }
+
+                if(node->right != nullptr){
+                    tree.nodes[tmpCount + ind].right = nxtCount;
+                    nextLayer.push(node->right);
+                    nxtCount++;
+                }
+
+                cudaFreeHost(node);
+            }
+
+            currentLayer = nextLayer;
+            nextLayer = queue<AABBNodeTemp*>();
+        }
 
         cout<<"numNodes: "<<numNodes<<endl;
         ::exit(0);
@@ -441,8 +469,8 @@ namespace dylanrt {
             std::cout << "Err: " << err << std::endl;
         }
 
-        size_t numMeshes = model.meshes.size();
-        size_t numPrimitives = 0;
+        uint32_t numMeshes = model.meshes.size();
+        uint32_t numPrimitives = 0;
 
         numVertices = 0;
         numTriangles = 0;
@@ -476,10 +504,10 @@ namespace dylanrt {
         cudaMallocHost(&triangles, numTriangles * sizeof(triangle));
         assertCudaError();
 
-        size_t vertexProcIndex = 0;
-        size_t triangleProcIndex = 0;
-        size_t primitiveProcIndex = 0;
-        size_t meshProcIndex = 0;
+        uint32_t vertexProcIndex = 0;
+        uint32_t triangleProcIndex = 0;
+        uint32_t primitiveProcIndex = 0;
+        uint32_t meshProcIndex = 0;
 
         //extract contents
         for (auto& mesh : model.meshes) {

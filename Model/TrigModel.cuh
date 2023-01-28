@@ -79,10 +79,10 @@ namespace dylanrt {
         unsigned int PrimitiveID;
         float3 maxPoint;
         float3 minPoint;
-        size_t begVertexIndex;
-        size_t endVertexIndex;
-        size_t begTriangleIndex;
-        size_t endTriangleIndex;
+        uint32_t begVertexIndex;
+        uint32_t endVertexIndex;
+        uint32_t begTriangleIndex;
+        uint32_t endTriangleIndex;
 
         unsigned int materialID;
     };
@@ -101,32 +101,31 @@ namespace dylanrt {
     };
 
     struct AABBnode{
-        float3 max;
-        float3 min;
+        float3 maxPoint;
+        float3 minPoint;
 
         bool isLeaf{};
 
         //if leaf the node would store the triangle indices
-        size_t trigIndex{};
+        uint32_t trigIndex{};
 
         //if not leaf the node would store the child indices
         //the childs are also AABBnodes
-        size_t left{};
-        size_t right{};
-        size_t parent{};
+        uint32_t left{};
+        uint32_t right{};
 
         AABBnode(float3 max, float3 min)
-                :max(max), min(min) {}
+                : maxPoint(max), minPoint(min) {}
     };
 
     struct AABBTree{
         AABBnode* nodes;
         AABBnode* nodesD;
-        size_t numNodes;
+        uint32_t numNodes;
     };
 
-    void buildAABBTree(AABBTree& tree, triangle* trigs, size_t numTrigs,
-                       float3* vertices, size_t numVertices);
+    void buildAABBTree(AABBTree& tree, triangle* trigs, uint32_t numTrigs,
+                       float3* vertices, uint32_t numVertices);
 
     //store a minimal model (with no subcomponents, textures, etc. only vertices and triangles)
     struct TrigModel {
@@ -148,8 +147,8 @@ namespace dylanrt {
         triangle* trianglesD;
         material* materialsD;
 
-        size_t numVertices;
-        size_t numTriangles;
+        uint32_t numVertices;
+        uint32_t numTriangles;
 
         //create a minimal model from a file:
         explicit TrigModel(const char* filename);
