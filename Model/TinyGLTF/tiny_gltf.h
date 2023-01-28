@@ -942,10 +942,10 @@ struct Accessor {
 };
 
 struct PerspectiveCamera {
-  double aspectRatio;  // min > 0
-  double yfov;         // required. min > 0
-  double zfar;         // min > 0
-  double znear;        // required. min > 0
+  double aspectRatio;  // minPoint > 0
+  double yfov;         // required. minPoint > 0
+  double zfar;         // minPoint > 0
+  double znear;        // required. minPoint > 0
 
   PerspectiveCamera()
       : aspectRatio(0.0),
@@ -1660,7 +1660,7 @@ class TinyGLTF {
 #ifdef _WIN32
 
 // issue 143.
-// Define NOMINMAX to avoid min/max defines,
+// Define NOMINMAX to avoid minPoint/maxPoint defines,
 // but undef it after included Windows.h
 #ifndef NOMINMAX
 #define TINYGLTF_INTERNAL_NOMINMAX
@@ -4487,10 +4487,10 @@ static bool ParseAccessor(Accessor *accessor, std::string *err, const json &o,
 
   accessor->minValues.clear();
   accessor->maxValues.clear();
-  ParseNumberArrayProperty(&accessor->minValues, err, o, "min", false,
+  ParseNumberArrayProperty(&accessor->minValues, err, o, "minPoint", false,
                            "Accessor");
 
-  ParseNumberArrayProperty(&accessor->maxValues, err, o, "max", false,
+  ParseNumberArrayProperty(&accessor->maxValues, err, o, "maxPoint", false,
                            "Accessor");
 
   accessor->count = count;
@@ -6879,8 +6879,8 @@ static void SerializeGltfAccessor(const Accessor &accessor, json &o) {
 
   if ((accessor.componentType == TINYGLTF_COMPONENT_TYPE_FLOAT) ||
       (accessor.componentType == TINYGLTF_COMPONENT_TYPE_DOUBLE)) {
-    SerializeNumberArrayProperty<double>("min", accessor.minValues, o);
-    SerializeNumberArrayProperty<double>("max", accessor.maxValues, o);
+    SerializeNumberArrayProperty<double>("minPoint", accessor.minValues, o);
+    SerializeNumberArrayProperty<double>("maxPoint", accessor.maxValues, o);
   } else {
     // Issue #301. Serialize as integer.
     // Assume int value is within [-2**31-1, 2**31-1]
@@ -6890,7 +6890,7 @@ static void SerializeGltfAccessor(const Accessor &accessor, json &o) {
                      std::back_inserter(values),
                      [](double v) { return static_cast<int>(v); });
 
-      SerializeNumberArrayProperty<int>("min", values, o);
+      SerializeNumberArrayProperty<int>("minPoint", values, o);
     }
 
     {
@@ -6899,7 +6899,7 @@ static void SerializeGltfAccessor(const Accessor &accessor, json &o) {
                      std::back_inserter(values),
                      [](double v) { return static_cast<int>(v); });
 
-      SerializeNumberArrayProperty<int>("max", values, o);
+      SerializeNumberArrayProperty<int>("maxPoint", values, o);
     }
   }
 

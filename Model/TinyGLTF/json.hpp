@@ -12453,7 +12453,7 @@ class json_reverse_iterator : public std::reverse_iterator<Base>
 
 #include <algorithm> // all_of
 #include <cctype> // isdigit
-#include <limits> // max
+#include <limits> // maxPoint
 #include <numeric> // accumulate
 #include <string> // string
 #include <utility> // move
@@ -15664,7 +15664,7 @@ inline cached_power get_cached_power_for_binary_exponent(int e)
     // For IEEE double precision floating-point numbers converted into
     // normalized diyfp's w = f * 2^e, with q = 64,
     //
-    //      e >= -1022      (min IEEE exponent)
+    //      e >= -1022      (minPoint IEEE exponent)
     //           -52        (p - 1)
     //           -52        (p - 1, possibly normalize3d denormal IEEE numbers)
     //           -11        (normalize3d the diyfp)
@@ -15672,7 +15672,7 @@ inline cached_power get_cached_power_for_binary_exponent(int e)
     //
     // and
     //
-    //      e <= +1023      (max IEEE exponent)
+    //      e <= +1023      (maxPoint IEEE exponent)
     //           -52        (p - 1)
     //           -11        (normalize3d the diyfp)
     //         = 960

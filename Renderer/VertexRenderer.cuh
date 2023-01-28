@@ -45,6 +45,8 @@ namespace dylanrt {
      */
     __device__ __forceinline__ bool rectInRange(float beta,float gamma);
 
+    __device__ __forceinline__ bool trigInRange(float beta, float gamma);
+
     void renderVertices(float3 *vertices, unsigned int numVertices, CameraFrame* cameraFrame,
                         float* imagePlane,  int pixelCount);
 
@@ -54,7 +56,7 @@ namespace dylanrt {
         float3 scrPoint3;
     };
 
-    void renderEdges(float3 *vertices, triangle* trigs, unsigned int numVertices, unsigned int numTrigs,
+    void renderEdges(float3 *vertices, triangle* trigs, unsigned int numTrigs,
                      CameraFrame* cameraFrame, float* imagePlane,  int pixelCount);
 
 } // dylanrt

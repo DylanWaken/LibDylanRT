@@ -2,12 +2,421 @@
 // Created by dylan on 1/20/23.
 //
 
+#include <float.h>
+#include <algorithm>
 #include "TrigModel.cuh"
 #include "../Renderer/UtilFunctions.cuh"
 #include "TinyGLTF/tiny_gltf.h"
 
 using namespace tinygltf;
 namespace dylanrt {
+
+    __host__ float objMedianSplit(vector<size_t>& indices, triangle* trigs, float3* vertices, int dim){
+        if(dim == 0){
+            //find the objective median
+            float objMedian = (vertices[trigs[indices[indices.size() / 2]].indices.x].x
+                               + vertices[trigs[indices[indices.size() / 2]].indices.y].x
+                               + vertices[trigs[indices[indices.size() / 2]].indices.z].x) / 3.0f;
+
+            return objMedian;
+        }
+
+        if(dim == 1){
+            //find the objective median
+            float objMedian = (vertices[trigs[indices[indices.size() / 2]].indices.x].y
+                               + vertices[trigs[indices[indices.size() / 2]].indices.y].y
+                               + vertices[trigs[indices[indices.size() / 2]].indices.z].y) / 3.0f;
+
+            return objMedian;
+        }
+
+        if(dim == 2){
+            //find the objective median
+            float objMedian = (vertices[trigs[indices[indices.size() / 2]].indices.x].z
+                               + vertices[trigs[indices[indices.size() / 2]].indices.y].z
+                               + vertices[trigs[indices[indices.size() / 2]].indices.z].z) / 3.0f;
+
+            return objMedian;
+        }
+    }
+
+    __host__ float3 getTrigCenter(triangle& trig, float3* vertices){
+        float centerX = (vertices[trig.indices.x].x + vertices[trig.indices.y].x + vertices[trig.indices.z].x) / 3.0f;
+        float centerY = (vertices[trig.indices.x].y + vertices[trig.indices.y].y + vertices[trig.indices.z].y) / 3.0f;
+        float centerZ = (vertices[trig.indices.x].z + vertices[trig.indices.y].z + vertices[trig.indices.z].z) / 3.0f;
+        return make_float3(centerX, centerY, centerZ);
+    }
+
+    __host__ float3 getTrigMin(triangle& trig, float3* vertices){
+        float minX = min(min(vertices[trig.indices.x].x, vertices[trig.indices.y].x), vertices[trig.indices.z].x);
+        float minY = min(min(vertices[trig.indices.x].y, vertices[trig.indices.y].y), vertices[trig.indices.z].y);
+        float minZ = min(min(vertices[trig.indices.x].z, vertices[trig.indices.y].z), vertices[trig.indices.z].z);
+        return make_float3(minX, minY, minZ);
+    }
+
+    __host__ float3 getTrigMax(triangle& trig, float3* vertices){
+        float maxX = max(max(vertices[trig.indices.x].x, vertices[trig.indices.y].x), vertices[trig.indices.z].x);
+        float maxY = max(max(vertices[trig.indices.x].y, vertices[trig.indices.y].y), vertices[trig.indices.z].y);
+        float maxZ = max(max(vertices[trig.indices.x].z, vertices[trig.indices.y].z), vertices[trig.indices.z].z);
+        return make_float3(maxX, maxY, maxZ);
+    }
+
+
+    struct AABBNodeTemp{
+        AABBNodeTemp* left{};
+        AABBNodeTemp* right{};
+        AABBNodeTemp* parent{};
+        vector<size_t>* indices{};
+        triangle* trigs;
+        float3* vertices;
+        int* numNodes;
+
+        float3 minPoint;
+        float3 maxPoint;
+
+        //if leaf
+        bool isLeaf = false;
+        size_t trigIndex{};
+
+        AABBNodeTemp(float3 max, float3 min, triangle* trig, float3* vertices, vector int* numNodes)
+                : maxPoint(max), minPoint(min), trigs(trig), vertices(vertices), numNodes(numNodes){}
+
+        void build(){
+            assert(!indices.empty());
+
+            if(indices.size() == 1){
+                isLeaf = true;
+                trigIndex = indices[0];
+            }
+
+            else {
+                isLeaf = false;
+                //find the longest dimension
+                float3 dim = subtract3d(maxPoint, minPoint);
+                int longestDim = 0;
+                float dimLength = dim.x;
+                if (dim.y > dimLength) {
+                    longestDim = 1;
+                }
+                if (dim.z > dimLength) {
+                    longestDim = 2;
+                }
+
+                //sort the indices according to the longest dimension
+                if (longestDim == 0) {
+                    sort(indices.begin(), indices.end(), [this](size_t a, size_t b) {
+                        float3 centerA = getTrigCenter(trigs[a], vertices);
+                        float3 centerB = getTrigCenter(trigs[b], vertices);
+                        return centerA.x < centerB.x;
+                    });
+                }
+
+                if (longestDim == 1) {
+                    sort(indices.begin(), indices.end(), [this](size_t a, size_t b) {
+                        float3 centerA = getTrigCenter(trigs[a], vertices);
+                        float3 centerB = getTrigCenter(trigs[b], vertices);
+                        return centerA.y < centerB.y;
+                    });
+                }
+
+                if (longestDim == 2) {
+                    sort(indices.begin(), indices.end(), [this](size_t a, size_t b) {
+                        float3 centerA = getTrigCenter(trigs[a], vertices);
+                        float3 centerB = getTrigCenter(trigs[b], vertices);
+                        return centerA.z < centerB.z;
+                    });
+                }
+
+                //find the objective median
+                float objMedian = objMedianSplit(indices, trigs, vertices, longestDim);
+
+                //recompute the maxPoint minPoint for both sub nodes
+                if (longestDim == 0) {
+                    float3 leftMax = make_float3(objMedian, maxPoint.y, maxPoint.z);
+                    float3 leftMin = make_float3(minPoint.x, minPoint.y, minPoint.z);
+
+                    float3 rightMax = make_float3(maxPoint.x, maxPoint.y, maxPoint.z);
+                    float3 rightMin = make_float3(objMedian, minPoint.y, minPoint.z);
+
+                    cudaMallocHost(&left, sizeof(AABBNodeTemp));
+                    cudaMallocHost(&right, sizeof(AABBNodeTemp));
+
+                    left->maxPoint = leftMax;
+                    left->minPoint = leftMin;
+                    left->trigs = trigs;
+                    left->vertices = vertices;
+                    left->numNodes = numNodes;
+
+                    right->maxPoint = rightMax;
+                    right->minPoint = rightMin;
+                    right->trigs = trigs;
+                    right->vertices = vertices;
+                    right->numNodes = numNodes;
+
+                    vector<size_t> leftIndices;
+                    vector<size_t> rightIndices;
+                    left->indices = leftIndices;
+                    right->indices = rightIndices;
+
+                    left->parent = this;
+                    right->parent = this;
+
+                    //split the indices
+                    for (int i = 0; i < indices.size(); ++i) {
+                        float3 trigCenter = getTrigCenter(trigs[indices[i]], vertices);
+                        if (trigCenter.x < objMedian && left->indices.size() < indices.size()-1) {
+                            left->indices.push_back(indices[i]);
+                        } else {
+                            if(left->indices.empty()){
+                                left->indices.push_back(indices[i]);
+                                continue;
+                            }
+                            right->indices.push_back(indices[i]);
+                        }
+                    }
+
+                    assert(!left->indices.empty());
+                    assert(!right->indices.empty());
+
+                    //calibrate minPoint maxPoint of the children
+                    for (auto ind: left->indices) {
+                        float3 trigMin = getTrigMin(trigs[ind], vertices);
+                        float3 trigMax = getTrigMax(trigs[ind], vertices);
+
+                        left->minPoint.x = min(left->minPoint.x, trigMin.x);
+                        left->minPoint.y = min(left->minPoint.y, trigMin.y);
+                        left->minPoint.z = min(left->minPoint.z, trigMin.z);
+
+                        left->maxPoint.x = max(left->maxPoint.x, trigMax.x);
+                        left->maxPoint.y = max(left->maxPoint.y, trigMax.y);
+                        left->maxPoint.z = max(left->maxPoint.z, trigMax.z);
+                    }
+
+                    for (auto ind: right->indices) {
+                        float3 trigMin = getTrigMin(trigs[ind], vertices);
+                        float3 trigMax = getTrigMax(trigs[ind], vertices);
+
+                        right->minPoint.x = min(right->minPoint.x, trigMin.x);
+                        right->minPoint.y = min(right->minPoint.y, trigMin.y);
+                        right->minPoint.z = min(right->minPoint.z, trigMin.z);
+
+                        right->maxPoint.x = max(right->maxPoint.x, trigMax.x);
+                        right->maxPoint.y = max(right->maxPoint.y, trigMax.y);
+                        right->maxPoint.z = max(right->maxPoint.z, trigMax.z);
+                    }
+
+                    numNodes[0] += 2;
+                    indices.clear();
+
+                    //build the children
+                    left->build();
+                    right->build();
+                }
+
+                if (longestDim == 1){
+                    float3 leftMax = make_float3(maxPoint.x, objMedian, maxPoint.z);
+                    float3 leftMin = make_float3(minPoint.x, minPoint.y, minPoint.z);
+
+                    float3 rightMax = make_float3(maxPoint.x, maxPoint.y, maxPoint.z);
+                    float3 rightMin = make_float3(minPoint.x, objMedian, minPoint.z);
+
+                    cudaMallocHost(&left, sizeof(AABBNodeTemp));
+                    cudaMallocHost(&right, sizeof(AABBNodeTemp));
+
+                    left->maxPoint = leftMax;
+                    left->minPoint = leftMin;
+                    left->trigs = trigs;
+                    left->vertices = vertices;
+                    left->numNodes = numNodes;
+
+                    right->maxPoint = rightMax;
+                    right->minPoint = rightMin;
+                    right->trigs = trigs;
+                    right->vertices = vertices;
+                    right->numNodes = numNodes;
+
+                    vector<size_t> leftIndices;
+                    vector<size_t> rightIndices;
+                    left->indices = leftIndices;
+                    right->indices = rightIndices;
+
+                    left->parent = this;
+                    right->parent = this;
+
+                    //split the indices
+                    for (int i = 0; i < indices.size(); ++i) {
+                        float3 trigCenter = getTrigCenter(trigs[indices[i]], vertices);
+                        if (trigCenter.y <= objMedian && left->indices.size() < indices.size()-1) {
+                            left->indices.push_back(indices[i]);
+                        } else {
+                            if(left->indices.empty()){
+                                left->indices.push_back(indices[i]);
+                                continue;
+                            }
+                            right->indices.push_back(indices[i]);
+                        }
+                    }
+
+                    assert(!left->indices.empty());
+                    assert(!right->indices.empty());
+
+                    //calibrate minPoint maxPoint of the children
+                    for (auto ind: left->indices) {
+                        float3 trigMin = getTrigMin(trigs[ind], vertices);
+                        float3 trigMax = getTrigMax(trigs[ind], vertices);
+
+                        left->minPoint.x = min(left->minPoint.x, trigMin.x);
+                        left->minPoint.y = min(left->minPoint.y, trigMin.y);
+                        left->minPoint.z = min(left->minPoint.z, trigMin.z);
+
+                        left->maxPoint.x = max(left->maxPoint.x, trigMax.x);
+                        left->maxPoint.y = max(left->maxPoint.y, trigMax.y);
+                        left->maxPoint.z = max(left->maxPoint.z, trigMax.z);
+                    }
+
+                    for (auto ind: right->indices) {
+                        float3 trigMin = getTrigMin(trigs[ind], vertices);
+                        float3 trigMax = getTrigMax(trigs[ind], vertices);
+
+                        right->minPoint.x = min(right->minPoint.x, trigMin.x);
+                        right->minPoint.y = min(right->minPoint.y, trigMin.y);
+                        right->minPoint.z = min(right->minPoint.z, trigMin.z);
+
+                        right->maxPoint.x = max(right->maxPoint.x, trigMax.x);
+                        right->maxPoint.y = max(right->maxPoint.y, trigMax.y);
+                        right->maxPoint.z = max(right->maxPoint.z, trigMax.z);
+                    }
+
+                    numNodes[0] += 2;
+                    //build the children
+                    indices.clear();
+
+                    left->build();
+                    right->build();
+
+                }
+
+                if(longestDim == 2){
+                    float3 leftMax = make_float3(maxPoint.x, maxPoint.y, objMedian);
+                    float3 leftMin = make_float3(minPoint.x, minPoint.y, minPoint.z);
+
+                    float3 rightMax = make_float3(maxPoint.x, maxPoint.y, maxPoint.z);
+                    float3 rightMin = make_float3(minPoint.x, minPoint.y, objMedian);
+
+                    cudaMallocHost(&left, sizeof(AABBNodeTemp));
+                    cudaMallocHost(&right, sizeof(AABBNodeTemp));
+
+                    left->maxPoint = leftMax;
+                    left->minPoint = leftMin;
+                    left->trigs = trigs;
+                    left->vertices = vertices;
+                    left->numNodes = numNodes;
+
+                    right->maxPoint = rightMax;
+                    right->minPoint = rightMin;
+                    right->trigs = trigs;
+                    right->vertices = vertices;
+                    right->numNodes = numNodes;
+
+                    vector<size_t> leftIndices;
+                    vector<size_t> rightIndices;
+                    left->indices = leftIndices;
+                    right->indices = rightIndices;
+
+                    left->parent = this;
+                    right->parent = this;
+
+                    //split the indices
+                    for (int i = 0; i < indices.size(); ++i) {
+                        float3 trigCenter = getTrigCenter(trigs[indices[i]], vertices);
+                        if (trigCenter.z <= objMedian && left->indices.size() < indices.size()-1) {
+                            left->indices.push_back(indices[i]);
+                        } else {
+                            if(left->indices.empty()){
+                                left->indices.push_back(indices[i]);
+                                continue;
+                            }
+                            right->indices.push_back(indices[i]);
+                        }
+                    }
+
+
+                    assert(!left->indices.empty());
+                    assert(!right->indices.empty());
+
+                    //calibrate minPoint maxPoint of the children
+                    for (auto ind: left->indices) {
+                        float3 trigMin = getTrigMin(trigs[ind], vertices);
+                        float3 trigMax = getTrigMax(trigs[ind], vertices);
+
+                        left->minPoint.x = min(left->minPoint.x, trigMin.x);
+                        left->minPoint.y = min(left->minPoint.y, trigMin.y);
+                        left->minPoint.z = min(left->minPoint.z, trigMin.z);
+
+                        left->maxPoint.x = max(left->maxPoint.x, trigMax.x);
+                        left->maxPoint.y = max(left->maxPoint.y, trigMax.y);
+                        left->maxPoint.z = max(left->maxPoint.z, trigMax.z);
+                    }
+
+                    for (auto ind: right->indices) {
+                        float3 trigMin = getTrigMin(trigs[ind], vertices);
+                        float3 trigMax = getTrigMax(trigs[ind], vertices);
+
+                        right->minPoint.x = min(right->minPoint.x, trigMin.x);
+                        right->minPoint.y = min(right->minPoint.y, trigMin.y);
+                        right->minPoint.z = min(right->minPoint.z, trigMin.z);
+
+                        right->maxPoint.x = max(right->maxPoint.x, trigMax.x);
+                        right->maxPoint.y = max(right->maxPoint.y, trigMax.y);
+                        right->maxPoint.z = max(right->maxPoint.z, trigMax.z);
+                    }
+                    numNodes[0] += 2;
+                    indices.clear();
+
+                    //build the children
+                    left->build();
+                    right->build();
+                }
+            }
+        }
+    };
+
+    void buildAABBTree(AABBTree& tree, triangle* trigs, size_t numTrigs,
+                       float3* vertices, size_t numVertices){
+
+        //initialize the array of trig indices
+        vector<size_t> trigIndices(numTrigs);
+        for (int i = 0; i < numTrigs; ++i) {
+            trigIndices[i] = i;
+        }
+
+        //find the minPoint maxPoint of the model
+        float3 min = make_float3(FLT_MAX, FLT_MAX, FLT_MAX);
+        float3 max = make_float3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+
+        for (int i = 0; i < numVertices; ++i) {
+            min.x = min.x < vertices[i].x ? min.x : vertices[i].x;
+            min.y = min.y < vertices[i].y ? min.y : vertices[i].y;
+            min.z = min.z < vertices[i].z ? min.z : vertices[i].z;
+
+            max.x = max.x > vertices[i].x ? max.x : vertices[i].x;
+            max.y = max.y > vertices[i].y ? max.y : vertices[i].y;
+            max.z = max.z > vertices[i].z ? max.z : vertices[i].z;
+        }
+
+        int numNodes = 0;
+        auto root = new AABBNodeTemp(max, min, trigs, vertices, &numNodes);
+
+        int count = 0;
+
+        for (auto ind: trigIndices) {
+            root->indices.push_back(ind);
+        }
+        root->build();
+
+        cout<<"numNodes: "<<numNodes<<endl;
+        ::exit(0);
+    }
 
     TrigModel::TrigModel(const char *filename) {
         Model model;
@@ -86,6 +495,7 @@ namespace dylanrt {
                 primitives[primitiveProcIndex].PrimitiveID = primitiveProcIndex;
                 primitives[primitiveProcIndex].begVertexIndex = vertexProcIndex;
                 primitives[primitiveProcIndex].begTriangleIndex = triangleProcIndex;
+                primitives[primitiveProcIndex].materialID = primitive.material;
 
                 //load vertex data
                 const Accessor& vertexAccess = model.accessors[primitive.attributes["POSITION"]];
@@ -100,10 +510,6 @@ namespace dylanrt {
                     float3 pos = make_float3(positions[i*3], positions[i*3+1], positions[i*3+2]);
                     vertices[vertexProcIndex + i] = pos;
                 }
-
-                //get primitive bounding box
-                primitives[primitiveProcIndex].max = make_float3(vertexAccess.maxValues[0], vertexAccess.maxValues[1], vertexAccess.maxValues[2]);
-                primitives[primitiveProcIndex].min = make_float3(vertexAccess.minValues[0], vertexAccess.minValues[1], vertexAccess.minValues[2]);
 
                 //load normal data
                 const Accessor& normalAccess = model.accessors[primitive.attributes["NORMAL"]];
@@ -209,12 +615,37 @@ namespace dylanrt {
             }
         }
 
+        cudaMallocHost(&materials, model.materials.size() * sizeof(material));
+        cudaMalloc(&materialsD, model.materials.size() * sizeof(material));
+        int materialProcIndex = 0;
+        for(auto material : model.materials){
+            //load the material
+            float3 baseColorFactor = {(float)material.pbrMetallicRoughness.baseColorFactor[0],
+                                      (float)material.pbrMetallicRoughness.baseColorFactor[1],
+                                      (float)material.pbrMetallicRoughness.baseColorFactor[2]};
+
+            float metallicFactor = (float)material.pbrMetallicRoughness.metallicFactor;
+
+            float roughnessFactor = (float)material.pbrMetallicRoughness.roughnessFactor;
+
+            float3 emissiveFactor = {(float)material.emissiveFactor[0],
+                                     (float)material.emissiveFactor[1],
+                                     (float)material.emissiveFactor[2]};
+
+            materials[materialProcIndex] = {emissiveFactor, baseColorFactor, metallicFactor, roughnessFactor};
+            materialProcIndex++;
+        }
+
+        AABBTree tree = AABBTree();
+        buildAABBTree(tree, triangles, numTriangles, vertices, numVertices);
+
         //copy to device
         cudaMemcpy(meshesD, meshes, numMeshes * sizeof(MeshLabel), cudaMemcpyHostToDevice);
         cudaMemcpy(primitivesD, primitives, numPrimitives * sizeof(PrimitiveLabel), cudaMemcpyHostToDevice);
         cudaMemcpy(verticesD, vertices, numVertices * sizeof(float3), cudaMemcpyHostToDevice);
         cudaMemcpy(normalsD, normals, numVertices * sizeof(float3), cudaMemcpyHostToDevice);
         cudaMemcpy(trianglesD, triangles, numTriangles * sizeof(triangle), cudaMemcpyHostToDevice);
+        cudaMemcpy(materialsD, materials, model.materials.size() * sizeof(material), cudaMemcpyHostToDevice);
         assertCudaError();
     }
 } // dylanrt

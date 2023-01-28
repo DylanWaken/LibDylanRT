@@ -16,17 +16,17 @@ int main(int argc, char** argv) {
     TrigModel model = TrigModel("/media/dylan/DylanFiles/Resources/Models/car2/scene2.gltf");
     reorientModel(&model);
 
-    int resX = 1440;
-    int resY = 960;
+    int resX = 1920;
+    int resY = 1200;
 
     EclipsePathO path = EclipsePathO(
         make_float3(-4, 4, 4),
         make_float3(0, 0, 0),
         make_float3(9.3, 0, 0),
         make_float3(0, 9.3, 0),
-        0.7,
-        1*0.480,
-         1*0.720,
+        4,
+        1.200,
+         1.920,
         resX,
         resY,
         0.01
@@ -43,10 +43,9 @@ int main(int argc, char** argv) {
     CameraFrame* cam;
     for(int i = 0; i < 100000; i++) {
         cam = path.getNextCamD();
-        renderVertices(model.verticesD, model.numVertices, cam, imageD, resX * resY);
+        renderEdges(model.verticesD, model.trianglesD, model.numTriangles, cam, imageD, resX*resY);
         createImage(imageD, pixelsD, resX, resY);
         glutPostRedisplay();
-        //this_thread::sleep_for(chrono::milliseconds(1000/60));
         cudaFree(cam);
     }
 

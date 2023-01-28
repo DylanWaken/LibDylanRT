@@ -30,7 +30,7 @@ add_executable(SimplePathTracer
         Display/PixelDisplay.cuh
         Renderer/UtilFunctions.cu
         Renderer/UtilFunctions.cuh
-        )
+        Renderer/PhongShading.cu Renderer/PhongShading.cuh)
 
 target_link_libraries(SimplePathTracer glut GL GLEW)
 

@@ -85,6 +85,12 @@ build CMakeFiles/SimplePathTracer.dir/Renderer/UtilFunctions.cu.o: CUDA_COMPILER
   OBJECT_DIR = CMakeFiles/SimplePathTracer.dir
   OBJECT_FILE_DIR = CMakeFiles/SimplePathTracer.dir/Renderer
 
+build CMakeFiles/SimplePathTracer.dir/Renderer/PhongShading.cu.o: CUDA_COMPILER__SimplePathTracer_Debug /home/dylan/CLionProjects/SimplePathTracer/Renderer/PhongShading.cu || cmake_object_order_depends_target_SimplePathTracer
+  DEP_FILE = CMakeFiles/SimplePathTracer.dir/Renderer/PhongShading.cu.o.d
+  FLAGS = --generate-code=arch=compute_86,code=[compute_86,sm_86] -g -G --keep -Xptxas -v
+  OBJECT_DIR = CMakeFiles/SimplePathTracer.dir
+  OBJECT_FILE_DIR = CMakeFiles/SimplePathTracer.dir/Renderer
+
 
 # =============================================================================
 # Device Link build statements for EXECUTABLE target SimplePathTracer
@@ -93,7 +99,7 @@ build CMakeFiles/SimplePathTracer.dir/Renderer/UtilFunctions.cu.o: CUDA_COMPILER
 #############################################
 # Link the executable CMakeFiles/SimplePathTracer.dir/cmake_device_link.o
 
-build CMakeFiles/SimplePathTracer.dir/cmake_device_link.o: CUDA_EXECUTABLE_DEVICE_LINKER__SimplePathTracer_Debug CMakeFiles/SimplePathTracer.dir/main.cu.o CMakeFiles/SimplePathTracer.dir/Model/TrigModel.cu.o CMakeFiles/SimplePathTracer.dir/Renderer/VertexRenderer.cu.o CMakeFiles/SimplePathTracer.dir/Renderer/CameraFrame.cu.o CMakeFiles/SimplePathTracer.dir/Display/PixelDisplay.cu.o CMakeFiles/SimplePathTracer.dir/Renderer/UtilFunctions.cu.o
+build CMakeFiles/SimplePathTracer.dir/cmake_device_link.o: CUDA_EXECUTABLE_DEVICE_LINKER__SimplePathTracer_Debug CMakeFiles/SimplePathTracer.dir/main.cu.o CMakeFiles/SimplePathTracer.dir/Model/TrigModel.cu.o CMakeFiles/SimplePathTracer.dir/Renderer/VertexRenderer.cu.o CMakeFiles/SimplePathTracer.dir/Renderer/CameraFrame.cu.o CMakeFiles/SimplePathTracer.dir/Display/PixelDisplay.cu.o CMakeFiles/SimplePathTracer.dir/Renderer/UtilFunctions.cu.o CMakeFiles/SimplePathTracer.dir/Renderer/PhongShading.cu.o
   LANGUAGE_COMPILE_FLAGS = --generate-code=arch=compute_86,code=[compute_86,sm_86]
   LINK_LIBRARIES = -lglut -lGL -lGLEW -lcudadevrt -lcudart_static -lrt -lpthread -ldl
   OBJECT_DIR = CMakeFiles/SimplePathTracer.dir
@@ -106,7 +112,7 @@ build CMakeFiles/SimplePathTracer.dir/cmake_device_link.o: CUDA_EXECUTABLE_DEVIC
 #############################################
 # Link the executable SimplePathTracer
 
-build SimplePathTracer: CUDA_EXECUTABLE_LINKER__SimplePathTracer_Debug CMakeFiles/SimplePathTracer.dir/main.cu.o CMakeFiles/SimplePathTracer.dir/Model/TrigModel.cu.o CMakeFiles/SimplePathTracer.dir/Renderer/VertexRenderer.cu.o CMakeFiles/SimplePathTracer.dir/Renderer/CameraFrame.cu.o CMakeFiles/SimplePathTracer.dir/Display/PixelDisplay.cu.o CMakeFiles/SimplePathTracer.dir/Renderer/UtilFunctions.cu.o CMakeFiles/SimplePathTracer.dir/cmake_device_link.o
+build SimplePathTracer: CUDA_EXECUTABLE_LINKER__SimplePathTracer_Debug CMakeFiles/SimplePathTracer.dir/main.cu.o CMakeFiles/SimplePathTracer.dir/Model/TrigModel.cu.o CMakeFiles/SimplePathTracer.dir/Renderer/VertexRenderer.cu.o CMakeFiles/SimplePathTracer.dir/Renderer/CameraFrame.cu.o CMakeFiles/SimplePathTracer.dir/Display/PixelDisplay.cu.o CMakeFiles/SimplePathTracer.dir/Renderer/UtilFunctions.cu.o CMakeFiles/SimplePathTracer.dir/Renderer/PhongShading.cu.o CMakeFiles/SimplePathTracer.dir/cmake_device_link.o
   FLAGS = --generate-code=arch=compute_86,code=[compute_86,sm_86]
   LINK_LIBRARIES = -lglut  -lGL  -lGLEW  -lcudadevrt  -lcudart_static  -lrt  -lpthread  -ldl
   OBJECT_DIR = CMakeFiles/SimplePathTracer.dir

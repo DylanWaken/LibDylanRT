@@ -59,8 +59,30 @@ namespace dylanrt {
         cudaMemcpy(model->normalsD, model->normals, sizeof(float3) * model->numVertices, cudaMemcpyHostToDevice);
     }
 
+    __global__ void solveTrigNormalsD(triangle* triangles, float3* vertices, unsigned int numTrigs){
+        uint32 idx = blockIdx.x * blockDim.x + threadIdx.x;
+        if(idx >= numTrigs) return;
+        auto v0 = vertices[triangles[idx].indices.x];
+        auto v1 = vertices[triangles[idx].indices.y];
+        auto v2 = vertices[triangles[idx].indices.z];
+
+        auto e1 = subtract3d(v1,v0);
+        auto e2 = subtract3d(v2,v0);
+
+        auto normal = cross(e1, e2);
+        normal = normalize3d(normal);
+
+        triangles[idx].normal = normal;
+    }
+
+    void solveTirgNormals(triangle* triangles, float3* vertices, unsigned int numTrigs){
+        solveTrigNormalsD<<<topOff(numTrigs, CUDA_BS_1D), CUDA_BS_1D>>>(triangles, vertices, numTrigs);
+        cudaDeviceSynchronize();
+        assertCudaError();
+    }
+
     /**
-     * Find the max value in the array A and store it in outA
+     * Find the maxPoint value in the array A and store it in outA
      * This funtion need to be called recursively
      * @tparam BLOCK_WARPS
      * @param A

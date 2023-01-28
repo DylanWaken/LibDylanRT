@@ -24,6 +24,8 @@ namespace dylanrt {
 
     __host__ void reorientModel(TrigModel* model);
 
+    void solveTirgNormals(triangle* triangles, float3* vertices, unsigned int numTrigs);
+
     float maxVal(float* imagePlane, int resolutionX, int resolutionY);
 
     float minVal(float* imagePlane, int resolutionX, int resolutionY);

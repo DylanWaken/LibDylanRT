@@ -77,12 +77,14 @@ namespace dylanrt {
 
     struct PrimitiveLabel{
         unsigned int PrimitiveID;
-        float3 max;
-        float3 min;
-        unsigned int begVertexIndex;
-        unsigned int endVertexIndex;
-        unsigned int begTriangleIndex;
-        unsigned int endTriangleIndex;
+        float3 maxPoint;
+        float3 minPoint;
+        size_t begVertexIndex;
+        size_t endVertexIndex;
+        size_t begTriangleIndex;
+        size_t endTriangleIndex;
+
+        unsigned int materialID;
     };
 
     struct MeshLabel{
@@ -91,12 +93,48 @@ namespace dylanrt {
         unsigned int endPrimitiveIndex;
     };
 
+    struct material{
+        float3 emissiveFactor;
+        float3 baseColorFactor;
+        float metallicFactor;
+        float roughnessFactor;
+    };
+
+    struct AABBnode{
+        float3 max;
+        float3 min;
+
+        bool isLeaf{};
+
+        //if leaf the node would store the triangle indices
+        size_t trigIndex{};
+
+        //if not leaf the node would store the child indices
+        //the childs are also AABBnodes
+        size_t left{};
+        size_t right{};
+        size_t parent{};
+
+        AABBnode(float3 max, float3 min)
+                :max(max), min(min) {}
+    };
+
+    struct AABBTree{
+        AABBnode* nodes;
+        AABBnode* nodesD;
+        size_t numNodes;
+    };
+
+    void buildAABBTree(AABBTree& tree, triangle* trigs, size_t numTrigs,
+                       float3* vertices, size_t numVertices);
+
     //store a minimal model (with no subcomponents, textures, etc. only vertices and triangles)
     struct TrigModel {
         //The vertices in Host memory
         float3* vertices;
         float3* normals;
         triangle* triangles;
+        material* materials;
 
         PrimitiveLabel* primitives;
         MeshLabel* meshes;
@@ -108,6 +146,7 @@ namespace dylanrt {
         float3* verticesD;
         float3* normalsD;
         triangle* trianglesD;
+        material* materialsD;
 
         size_t numVertices;
         size_t numTriangles;
@@ -115,6 +154,13 @@ namespace dylanrt {
         //create a minimal model from a file:
         explicit TrigModel(const char* filename);
     };
+
+    struct pointLight{
+        float3 position;
+        float3 baseColor;
+        float intensity;
+    };
+
 } // dylanrt
 
 #endif //SIMPLEPATHTRACER_TRIGMODEL_CUH
