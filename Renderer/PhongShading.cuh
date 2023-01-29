@@ -47,8 +47,8 @@ namespace dylanrt {
      * @param numPixls
      * @param Ia
      */
-    void phongShading(PrimitiveLabel* primitives, material* materials, triangle* trigs, float3* vertices, pointLight* lights,
-                      unsigned int numTrigs, unsigned int numLights, CameraFrame* cameraFrame,float* imagePlane,
+    void phongShading(material* materials, triangle* trigs, float3* vertices, AABBnode* nodes, pointLight* lights,
+                      unsigned int numNodes, unsigned int numLights, CameraFrame* cameraFrame,float* imagePlane,
                       unsigned int numPixls, float3 ambientLight);
 
 } // dylanrt

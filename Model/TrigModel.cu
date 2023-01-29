@@ -9,6 +9,8 @@
 #include "TinyGLTF/tiny_gltf.h"
 #include <queue>
 
+#define EPSILON 0.0001f
+
 using namespace tinygltf;
 namespace dylanrt {
 
@@ -109,7 +111,7 @@ namespace dylanrt {
 
                 //partial sort the indices between indBegin and indEnd
                 if (longestDim == 0) {
-                    sort(indices->begin() + indBegin, indices->begin() + indEnd + 1,
+                    sort(indices->begin() + indBegin, indices->begin() + indEnd,
                          [this](uint32_t a, uint32_t b) {
                              return (vertices[trigs[a].indices.x].x + vertices[trigs[a].indices.y].x + vertices[trigs[a].indices.z].x) / 3.0f
                                     < (vertices[trigs[b].indices.x].x + vertices[trigs[b].indices.y].x + vertices[trigs[b].indices.z].x) / 3.0f;
@@ -117,7 +119,7 @@ namespace dylanrt {
                 }
 
                 if (longestDim == 1) {
-                    sort(indices->begin() + indBegin, indices->begin() + indEnd + 1,
+                    sort(indices->begin() + indBegin, indices->begin() + indEnd,
                          [this](uint32_t a, uint32_t b) {
                              return (vertices[trigs[a].indices.x].y + vertices[trigs[a].indices.y].y + vertices[trigs[a].indices.z].y) / 3.0f
                                     < (vertices[trigs[b].indices.x].y + vertices[trigs[b].indices.y].y + vertices[trigs[b].indices.z].y) / 3.0f;
@@ -125,7 +127,7 @@ namespace dylanrt {
                 }
 
                 if (longestDim == 2) {
-                    sort(indices->begin() + indBegin, indices->begin() + indEnd + 1,
+                    sort(indices->begin() + indBegin, indices->begin() + indEnd,
                          [this](uint32_t a, uint32_t b) {
                              return (vertices[trigs[a].indices.x].z + vertices[trigs[a].indices.y].z + vertices[trigs[a].indices.z].z) / 3.0f
                                     < (vertices[trigs[b].indices.x].z + vertices[trigs[b].indices.y].z + vertices[trigs[b].indices.z].z) / 3.0f;
@@ -163,15 +165,7 @@ namespace dylanrt {
                     left->parent = this;
                     right->parent = this;
 
-                    uint32_t boarderInd = indBegin;
-
-                    //split the indices
-                    for (auto i = indBegin; i < indEnd; ++i) {
-                        float3 trigCenter = getTrigCenter(trigs[(*indices)[i]], vertices);
-                        if ((trigCenter.x < objMedian || boarderInd == indBegin)&&(boarderInd < indEnd-1)) {
-                            boarderInd++;
-                        }
-                    }
+                    uint32_t boarderInd = (indBegin + indEnd)/2;
 
                     //calibrate minPoint maxPoint of the children
                     for (auto i = indBegin; i < boarderInd; ++i) {
@@ -239,15 +233,7 @@ namespace dylanrt {
                     left->parent = this;
                     right->parent = this;
 
-                    uint32_t boarderInd = indBegin;
-
-                    //split the indices
-                    for (auto i = indBegin; i < indEnd; ++i) {
-                        float3 trigCenter = getTrigCenter(trigs[(*indices)[i]], vertices);
-                        if ((trigCenter.y < objMedian || boarderInd == indBegin) && (boarderInd < indEnd - 1)) {
-                            boarderInd++;
-                        }
-                    }
+                    uint32_t boarderInd = (indBegin + indEnd)/2;
 
                     //calibrate minPoint maxPoint of the children
                     for (auto i = indBegin; i < boarderInd; ++i) {
@@ -315,15 +301,7 @@ namespace dylanrt {
                     left->parent = this;
                     right->parent = this;
 
-                    uint32_t boarderInd = indBegin;
-
-                    //split the indices
-                    for (auto i = indBegin; i < indEnd; ++i) {
-                        float3 trigCenter = getTrigCenter(trigs[(*indices)[i]], vertices);
-                        if ((trigCenter.z < objMedian || boarderInd == indBegin) && (boarderInd < indEnd - 1)) {
-                            boarderInd++;
-                        }
-                    }
+                    uint32_t boarderInd = (indBegin + indEnd)/2;
 
                     //calibrate minPoint maxPoint of the children
                     for (auto i = indBegin; i < boarderInd; ++i) {
@@ -390,7 +368,7 @@ namespace dylanrt {
             max.z = max.z > vertices[i].z ? max.z : vertices[i].z;
         }
 
-        int numNodes = 0;
+        int numNodes = 1;
         auto root = new AABBNodeTemp(max, min, trigs, vertices, &trigIndices, &numNodes);
         root->indBegin = 0;
         root->indEnd = numTrigs;
@@ -403,6 +381,9 @@ namespace dylanrt {
 
         //do a BFS to generate the actual tree
         cudaMallocHost(&tree.nodes, sizeof(AABBnode) * numNodes);
+        cudaMalloc(&tree.nodesD, sizeof(AABBnode) * numNodes);
+
+        assertCudaError();
 
         queue<AABBNodeTemp*> currentLayer;
         queue<AABBNodeTemp*> nextLayer;
@@ -413,7 +394,6 @@ namespace dylanrt {
             count += currentLayer.size();
             auto nxtCount = count;
             auto size = currentLayer.size();
-            cout << "count: " << count << " layerSize" << size << endl;
             for(unsigned int ind = 0; ind < size; ind++){
                 AABBNodeTemp* node = currentLayer.front();
                 currentLayer.pop();
@@ -423,27 +403,26 @@ namespace dylanrt {
                 tree.nodes[tmpCount + ind].isLeaf = node->isLeaf;
                 tree.nodes[tmpCount + ind].trigIndex = node->trigIndex;
 
-                if(node->left != nullptr){
-                    tree.nodes[tmpCount + ind].left = nxtCount;
-                    nextLayer.push(node->left);
-                    nxtCount++;
-                }
+                if(node->isLeaf) continue;
 
-                if(node->right != nullptr){
-                    tree.nodes[tmpCount + ind].right = nxtCount;
-                    nextLayer.push(node->right);
-                    nxtCount++;
-                }
+                tree.nodes[tmpCount + ind].left = nxtCount;
+                nextLayer.push(node->left);
+                nxtCount++;
 
-                cudaFreeHost(node);
+                tree.nodes[tmpCount + ind].right = nxtCount;
+                nextLayer.push(node->right);
+                nxtCount++;
+
             }
-
             currentLayer = nextLayer;
             nextLayer = queue<AABBNodeTemp*>();
         }
 
-        cout<<"numNodes: "<<numNodes<<endl;
-        ::exit(0);
+        assertCudaError();
+        cudaMemcpy(tree.nodesD, tree.nodes, sizeof(AABBnode) * numNodes, cudaMemcpyHostToDevice);
+        tree.numNodes = numNodes;
+        cout << "Number of nodes: " << numNodes << endl;
+        assertCudaError();
     }
 
     TrigModel::TrigModel(const char *filename) {
@@ -566,6 +545,7 @@ namespace dylanrt {
                     for(int i = 0; i < numI0; i+=3) {
                         auto tri = triangle(make_uint3(indices[i] + vertexProcIndex,
                                                        indices[i+1] + vertexProcIndex, indices[i+2] + vertexProcIndex));
+                        tri.materialID = primitive.material;
                         triangles[triangleProcIndex + i/3] = tri;
                     }
                 } else if(indexAccess.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT) {
@@ -573,6 +553,7 @@ namespace dylanrt {
                     for(int i = 0; i < numI0; i+=3) {
                         auto tri = triangle(make_uint3((uint)indices[i] + vertexProcIndex,
                                                        (uint)indices[i+1] + vertexProcIndex, (uint)indices[i+2] + vertexProcIndex));
+                        tri.materialID = primitive.material;
                         triangles[triangleProcIndex + i/3] = tri;
                     }
                 } else {
@@ -664,9 +645,6 @@ namespace dylanrt {
             materialProcIndex++;
         }
 
-        AABBTree tree = AABBTree();
-        buildAABBTree(tree, triangles, numTriangles, vertices, numVertices);
-
         //copy to device
         cudaMemcpy(meshesD, meshes, numMeshes * sizeof(MeshLabel), cudaMemcpyHostToDevice);
         cudaMemcpy(primitivesD, primitives, numPrimitives * sizeof(PrimitiveLabel), cudaMemcpyHostToDevice);
@@ -675,5 +653,11 @@ namespace dylanrt {
         cudaMemcpy(trianglesD, triangles, numTriangles * sizeof(triangle), cudaMemcpyHostToDevice);
         cudaMemcpy(materialsD, materials, model.materials.size() * sizeof(material), cudaMemcpyHostToDevice);
         assertCudaError();
+    }
+
+    void TrigModel::buildTree() {
+        AABBTree *tree0 = &tree;
+        cudaMallocHost(&tree0, sizeof(AABBTree));
+        buildAABBTree(tree, triangles, numTriangles, vertices, numVertices);
     }
 } // dylanrt

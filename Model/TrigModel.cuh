@@ -51,6 +51,7 @@ namespace dylanrt {
     struct triangle {
         uint3 indices{};
         float3 normal{};
+        unsigned int materialID;
 
         //a triangle defined by 3 vertices
         __device__ __host__ triangle(uint3 indices)
@@ -104,18 +105,15 @@ namespace dylanrt {
         float3 maxPoint;
         float3 minPoint;
 
-        bool isLeaf{};
+        bool isLeaf;
 
         //if leaf the node would store the triangle indices
-        uint32_t trigIndex{};
+        uint32_t trigIndex;
 
         //if not leaf the node would store the child indices
         //the childs are also AABBnodes
-        uint32_t left{};
-        uint32_t right{};
-
-        AABBnode(float3 max, float3 min)
-                : maxPoint(max), minPoint(min) {}
+        uint32_t left;
+        uint32_t right;
     };
 
     struct AABBTree{
@@ -150,8 +148,12 @@ namespace dylanrt {
         uint32_t numVertices;
         uint32_t numTriangles;
 
+        AABBTree tree;
+
         //create a minimal model from a file:
         explicit TrigModel(const char* filename);
+
+        void buildTree();
     };
 
     struct pointLight{
