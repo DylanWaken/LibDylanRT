@@ -16,7 +16,7 @@ using namespace dylanrt;
 int main(int argc, char** argv) {
     glutInit(&argc, argv);
 
-    TrigModel model = TrigModel("/media/dylan/DylanFiles/Resources/Models/car2/scene2.gltf");
+    TrigModel model = TrigModel("/media/dylan/DylanFiles/Resources/Models/Sphere/Sphere.glb");
     reorientModel(&model);
     model.buildTree();
 

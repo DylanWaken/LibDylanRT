@@ -4,6 +4,7 @@
 
 #include "PhongShading.cuh"
 #include "UtilFunctions.cuh"
+#include "chrono"
 
 #define AABB_PREFETCHED_LAYER_SIZE (1+ 2 + 4 + 8 + 16 + 32 + 64 + 128 + 256 + 512)
 #define AABB_PREFETCHED_LAYERS 11
@@ -23,15 +24,15 @@ namespace dylanrt {
     //we use slab method to check if a ray intersects with a box
     //basically we treat the box as pairs of parellel planes and gradually clip the ray
     //if the ray is still alive after clipping, then it intersects with the box
-    __device__ __forceinline__ bool rayBoxIntersect(float3 max, float3 min, float3 e, float3 d){
-        float t1x = (min.x - e.x) / d.x;
-        float t2x = (max.x - e.x) / d.x;
+    __device__ __forceinline__ bool rayBoxIntersect(float3 max, float3 min, float3 e, float3 inverseD){
+        float t1x = (min.x - e.x) * inverseD.x;
+        float t2x = (max.x - e.x) * inverseD.x;
 
-        float t1y = (min.y - e.y) / d.y;
-        float t2y = (max.y - e.y) / d.y;
+        float t1y = (min.y - e.y) * inverseD.y;
+        float t2y = (max.y - e.y) * inverseD.y;
 
-        float t1z = (min.z - e.z) / d.z;
-        float t2z = (max.z - e.z) / d.z;
+        float t1z = (min.z - e.z) * inverseD.z;
+        float t2z = (max.z - e.z) * inverseD.z;
 
         float tmin = fmaxf(fmaxf(fminf(t1x, t2x), fminf(t1y, t2y)), fminf(t1z, t2z));
         float tmax = fminf(fminf(fmaxf(t1x, t2x), fmaxf(t1y, t2y)), fmaxf(t1z, t2z));
@@ -40,7 +41,7 @@ namespace dylanrt {
         return tmax >= tmin;
     }
 
-    __device__ __forceinline__ solvedParams findIntersect(float3 e, float3 d, AABBnode* nodeShared, AABBnode* nodes,
+    __device__ __forceinline__ solvedParams findIntersect(float3 e, float3 d, float3 invD, AABBnode* nodeShared, AABBnode* nodes,
                                                     triangle* trigs, float3* vertices){
         //register of node indices:
         unsigned int nodeIndices[AABB_SEARCH_STACK_DEPTH];
@@ -83,8 +84,8 @@ namespace dylanrt {
             AABBnode left = node.left < AABB_PREFETCHED_LAYER_SIZE ? nodeShared[node.left] : nodes[node.left];
             AABBnode right = node.right < AABB_PREFETCHED_LAYER_SIZE ? nodeShared[node.right] : nodes[node.right];
 
-            bool rayIntersectLeft = rayBoxIntersect(left.maxPoint, left.minPoint, e, d);
-            bool rayIntersectRight = rayBoxIntersect(right.maxPoint, right.minPoint, e, d);
+            bool rayIntersectLeft = rayBoxIntersect(left.maxPoint, left.minPoint, e, invD);
+            bool rayIntersectRight = rayBoxIntersect(right.maxPoint, right.minPoint, e, invD);
             if(!rayIntersectLeft && !rayIntersectRight){
                 continue;
             }
@@ -106,7 +107,7 @@ namespace dylanrt {
     }
 
     template<const int BM>
-    __launch_bounds__(BM, 1)
+    __launch_bounds__(BM, 2)
     __global__ void phongShadingD(material* materials, triangle* trigs, float3* vertices, AABBnode* nodes, pointLight* lights,
                                   unsigned int numNodes, unsigned int numLights, CameraFrame* cameraFrame,float* imagePlane,
                                   unsigned int numPixls, float3 ambientLight){
@@ -148,9 +149,10 @@ namespace dylanrt {
 
             //solve for ray direction
             float3 d = normalize3d(subtract3d(make_float3(picX, picY, picZ),frame.positionE));
+            float3 invD = make_float3(1.0f/d.x, 1.0f/d.y, 1.0f/d.z);
 
             //find the closest triangle
-            solvedParams trigParams = findIntersect(frame.positionE, d, nodeShared, nodes, trigs, vertices);
+            solvedParams trigParams = findIntersect(frame.positionE, d, invD, nodeShared, nodes, trigs, vertices);
 
             float z0 = abs(norm3d(subtract3d(frame.positionE, make_float3(0,0,0))));
 
@@ -169,13 +171,17 @@ namespace dylanrt {
     void phongShading(material* materials, triangle* trigs, float3* vertices, AABBnode* nodes, pointLight* lights,
                       unsigned int numNodes, unsigned int numLights, CameraFrame* cameraFrame,float* imagePlane,
                       unsigned int numPixls, float3 ambientLight){
-        unsigned int blockSize = 256;
-        unsigned int gridSize = (numPixls + blockSize - 1) / blockSize;
-        phongShadingD<256><<<gridSize, blockSize>>>(materials, trigs, vertices, nodes,
+        unsigned int blockSize = 512;
+        unsigned int gridSize = (numPixls/4 + blockSize - 1) / blockSize;
+        auto t1 = std::chrono::high_resolution_clock::now();
+
+        phongShadingD<512><<<gridSize, blockSize>>>(materials, trigs, vertices, nodes,
                                                     lights, numNodes, numLights, cameraFrame, imagePlane,
                                                     numPixls, ambientLight);
 
         cudaDeviceSynchronize();
+        auto t2 = std::chrono::high_resolution_clock::now();
+        std::cout << "Time taken: " << std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count() << "ms" << std::endl;
         assertCudaError();
     }
 } // dylanrt
