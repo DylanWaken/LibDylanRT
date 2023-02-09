@@ -5,7 +5,7 @@
 
 #include "Model/TrigModel.cuh"
 #include "Renderer/VertexRenderer.cuh"
-#include "Display/PixelDisplay.cuh"
+#include "Display/PixelDisplayGLUT.cuh"
 
 using namespace std;
 using namespace dylanrt;
@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
     float* imageD;
     cudaMalloc(&imageD, 3 * resX * resY * sizeof(float3));
 
-    PixelDisplay display = PixelDisplay(resX, resY);
+    PixelDisplayGLUT display = PixelDisplayGLUT(resX, resY);
     createImage(imageD, pixelsD, resX, resY);
 
     auto tr = display.start();

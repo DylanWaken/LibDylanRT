@@ -476,6 +476,10 @@ namespace dylanrt {
         cudaMalloc(&verticesD, numVertices * sizeof(float3));
         cudaMallocHost(&vertices, numVertices * sizeof(float3));
 
+        cudaMalloc(&screenSolvedD, numVertices * sizeof(float3));
+        cudaMalloc(&screenVerticesD, numVertices * sizeof(float3));
+        cudaMalloc(&inrangeD, numVertices * sizeof(bool));
+
         cudaMalloc(&normalsD, numVertices * sizeof(float3));
         cudaMallocHost(&normals, numVertices * sizeof(float3));
 

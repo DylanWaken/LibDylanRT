@@ -5,9 +5,11 @@
 #include <GL/gl.h>
 #include <cudaGL.h>
 #include <GL/glut.h>
+#include <GL/freeglut.h>
 #include <cuda_gl_interop.h>
 #include "../Renderer/UtilFunctions.cuh"
 #include <thread>
+#include <GLFW/glfw3.h>
 
 #ifndef SIMPLEPATHTRACER_PIXELDISPLAY_CUH
 #define SIMPLEPATHTRACER_PIXELDISPLAY_CUH
@@ -19,11 +21,13 @@ namespace dylanrt {
     extern unsigned char* pixels;
     extern unsigned char* pixelsD;
 
-    struct PixelDisplay {
+    struct PixelDisplayGLUT {
 
-        PixelDisplay(int w, int h) {
+        PixelDisplayGLUT(int w, int h) {
             cudaMallocHost(&pixels, w * h * sizeof(unsigned char) * 3);
             cudaMalloc(&pixelsD, w * h * sizeof(unsigned char) * 3);
+            cudaMemset(pixelsD, 255, w * h * 3);
+            cudaMemset(pixels, 255, w * h * 3);
             assertCudaError();
 
             windowH = h;
@@ -34,7 +38,6 @@ namespace dylanrt {
             glutCreateWindow("Render Preview");
 
             glutDisplayFunc([]() {
-                glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
                 cudaMemcpy(pixels, pixelsD, windowW * windowH * sizeof(unsigned char) * 3, cudaMemcpyDeviceToHost);
                 glDrawPixels(windowW, windowH, GL_RGB, GL_UNSIGNED_BYTE, pixels);
                 glFlush();
@@ -42,10 +45,17 @@ namespace dylanrt {
                 glutPostRedisplay();
             });
         }
+    };
 
-        //create mainloop thread
-        thread start() {
-            return thread(glutMainLoop);
+    struct PixelDisplayGLFW{
+        PixelDisplayGLFW(int w, int h) {
+            cudaMallocHost(&pixels, w * h * sizeof(unsigned char) * 3);
+            cudaMalloc(&pixelsD, w * h * sizeof(unsigned char) * 3);
+            cudaMemset(pixelsD, 0, w * h * 3);
+            assertCudaError();
+
+            GLFWwindow* window = glfwCreateWindow(w, h, "Window", nullptr, nullptr);
+            glfwMakeContextCurrent(window);
         }
     };
 

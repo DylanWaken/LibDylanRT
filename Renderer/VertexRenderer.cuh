@@ -43,23 +43,25 @@ namespace dylanrt {
                   + (a.y - b.y) * ((d.x) * (a.z - c.z) - (a.x - c.x) * (d.z))
                   + (a.z - b.z) * ((a.x - c.x) * (d.y) - (d.x) * (a.y - c.y));
 
+        float MInv = 1 / M;
+
         //first cramer determinant
         float beta = (a.x - e.x) * ((a.y - c.y) * (d.z) - (a.z - c.z) * (d.y))
                      + (a.y - e.y) * ((a.z - c.z) * (d.x) - (a.x - c.x) * (d.z))
                      + (a.z - e.z) * ((a.x - c.x) * (d.y) - (a.y - c.y) * (d.x));
-        beta /= M;
+        beta *= MInv;
 
         //second cramer determinant
         float gamma = (a.x - b.x) * ((a.y - e.y) * (d.z) - (a.z - e.z) * (d.y))
                       + (a.y - b.y) * ((a.z - e.z) * (d.x) - (a.x - e.x) * (d.z))
                       + (a.z - b.z) * ((a.x - e.x) * (d.y) - (a.y - e.y) * (d.x));
-        gamma /= M;
+        gamma *= MInv;
 
         //third cramer determinant
         float t = (a.x - b.x) * ((a.y - c.y) * (a.z - e.z) - (a.z - c.z) * (a.y - e.y))
                   + (a.y - b.y) * ((a.z - c.z) * (a.x - e.x) - (a.x - c.x) * (a.z - e.z))
                   + (a.z - b.z) * ((a.x - c.x) * (a.y - e.y) - (a.y - c.y) * (a.x - e.x));
-        t /= M;
+        t *= MInv;
 
         return make_float3(beta, gamma, t);
     }

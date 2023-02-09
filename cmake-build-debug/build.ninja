@@ -51,43 +51,49 @@ build cmake_object_order_depends_target_SimplePathTracer: phony || CMakeFiles/Si
 
 build CMakeFiles/SimplePathTracer.dir/main.cu.o: CUDA_COMPILER__SimplePathTracer_Debug /home/dylan/CLionProjects/SimplePathTracer/main.cu || cmake_object_order_depends_target_SimplePathTracer
   DEP_FILE = CMakeFiles/SimplePathTracer.dir/main.cu.o.d
-  FLAGS = --generate-code=arch=compute_86,code=[compute_86,sm_86] -g -G --keep -Xptxas -v
+  FLAGS = -g --generate-code=arch=compute_86,code=[compute_86,sm_86] -g -G --keep -Xptxas -v
   OBJECT_DIR = CMakeFiles/SimplePathTracer.dir
   OBJECT_FILE_DIR = CMakeFiles/SimplePathTracer.dir
 
 build CMakeFiles/SimplePathTracer.dir/Model/TrigModel.cu.o: CUDA_COMPILER__SimplePathTracer_Debug /home/dylan/CLionProjects/SimplePathTracer/Model/TrigModel.cu || cmake_object_order_depends_target_SimplePathTracer
   DEP_FILE = CMakeFiles/SimplePathTracer.dir/Model/TrigModel.cu.o.d
-  FLAGS = --generate-code=arch=compute_86,code=[compute_86,sm_86] -g -G --keep -Xptxas -v
+  FLAGS = -g --generate-code=arch=compute_86,code=[compute_86,sm_86] -g -G --keep -Xptxas -v
   OBJECT_DIR = CMakeFiles/SimplePathTracer.dir
   OBJECT_FILE_DIR = CMakeFiles/SimplePathTracer.dir/Model
 
 build CMakeFiles/SimplePathTracer.dir/Renderer/VertexRenderer.cu.o: CUDA_COMPILER__SimplePathTracer_Debug /home/dylan/CLionProjects/SimplePathTracer/Renderer/VertexRenderer.cu || cmake_object_order_depends_target_SimplePathTracer
   DEP_FILE = CMakeFiles/SimplePathTracer.dir/Renderer/VertexRenderer.cu.o.d
-  FLAGS = --generate-code=arch=compute_86,code=[compute_86,sm_86] -g -G --keep -Xptxas -v
+  FLAGS = -g --generate-code=arch=compute_86,code=[compute_86,sm_86] -g -G --keep -Xptxas -v
   OBJECT_DIR = CMakeFiles/SimplePathTracer.dir
   OBJECT_FILE_DIR = CMakeFiles/SimplePathTracer.dir/Renderer
 
 build CMakeFiles/SimplePathTracer.dir/Renderer/CameraFrame.cu.o: CUDA_COMPILER__SimplePathTracer_Debug /home/dylan/CLionProjects/SimplePathTracer/Renderer/CameraFrame.cu || cmake_object_order_depends_target_SimplePathTracer
   DEP_FILE = CMakeFiles/SimplePathTracer.dir/Renderer/CameraFrame.cu.o.d
-  FLAGS = --generate-code=arch=compute_86,code=[compute_86,sm_86] -g -G --keep -Xptxas -v
+  FLAGS = -g --generate-code=arch=compute_86,code=[compute_86,sm_86] -g -G --keep -Xptxas -v
   OBJECT_DIR = CMakeFiles/SimplePathTracer.dir
   OBJECT_FILE_DIR = CMakeFiles/SimplePathTracer.dir/Renderer
 
 build CMakeFiles/SimplePathTracer.dir/Display/PixelDisplay.cu.o: CUDA_COMPILER__SimplePathTracer_Debug /home/dylan/CLionProjects/SimplePathTracer/Display/PixelDisplay.cu || cmake_object_order_depends_target_SimplePathTracer
   DEP_FILE = CMakeFiles/SimplePathTracer.dir/Display/PixelDisplay.cu.o.d
-  FLAGS = --generate-code=arch=compute_86,code=[compute_86,sm_86] -g -G --keep -Xptxas -v
+  FLAGS = -g --generate-code=arch=compute_86,code=[compute_86,sm_86] -g -G --keep -Xptxas -v
   OBJECT_DIR = CMakeFiles/SimplePathTracer.dir
   OBJECT_FILE_DIR = CMakeFiles/SimplePathTracer.dir/Display
 
 build CMakeFiles/SimplePathTracer.dir/Renderer/UtilFunctions.cu.o: CUDA_COMPILER__SimplePathTracer_Debug /home/dylan/CLionProjects/SimplePathTracer/Renderer/UtilFunctions.cu || cmake_object_order_depends_target_SimplePathTracer
   DEP_FILE = CMakeFiles/SimplePathTracer.dir/Renderer/UtilFunctions.cu.o.d
-  FLAGS = --generate-code=arch=compute_86,code=[compute_86,sm_86] -g -G --keep -Xptxas -v
+  FLAGS = -g --generate-code=arch=compute_86,code=[compute_86,sm_86] -g -G --keep -Xptxas -v
   OBJECT_DIR = CMakeFiles/SimplePathTracer.dir
   OBJECT_FILE_DIR = CMakeFiles/SimplePathTracer.dir/Renderer
 
 build CMakeFiles/SimplePathTracer.dir/Renderer/PhongShading.cu.o: CUDA_COMPILER__SimplePathTracer_Debug /home/dylan/CLionProjects/SimplePathTracer/Renderer/PhongShading.cu || cmake_object_order_depends_target_SimplePathTracer
   DEP_FILE = CMakeFiles/SimplePathTracer.dir/Renderer/PhongShading.cu.o.d
-  FLAGS = --generate-code=arch=compute_86,code=[compute_86,sm_86] -g -G --keep -Xptxas -v
+  FLAGS = -g --generate-code=arch=compute_86,code=[compute_86,sm_86] -g -G --keep -Xptxas -v
+  OBJECT_DIR = CMakeFiles/SimplePathTracer.dir
+  OBJECT_FILE_DIR = CMakeFiles/SimplePathTracer.dir/Renderer
+
+build CMakeFiles/SimplePathTracer.dir/Renderer/Transform.cu.o: CUDA_COMPILER__SimplePathTracer_Debug /home/dylan/CLionProjects/SimplePathTracer/Renderer/Transform.cu || cmake_object_order_depends_target_SimplePathTracer
+  DEP_FILE = CMakeFiles/SimplePathTracer.dir/Renderer/Transform.cu.o.d
+  FLAGS = -g --generate-code=arch=compute_86,code=[compute_86,sm_86] -g -G --keep -Xptxas -v
   OBJECT_DIR = CMakeFiles/SimplePathTracer.dir
   OBJECT_FILE_DIR = CMakeFiles/SimplePathTracer.dir/Renderer
 
@@ -99,9 +105,9 @@ build CMakeFiles/SimplePathTracer.dir/Renderer/PhongShading.cu.o: CUDA_COMPILER_
 #############################################
 # Link the executable CMakeFiles/SimplePathTracer.dir/cmake_device_link.o
 
-build CMakeFiles/SimplePathTracer.dir/cmake_device_link.o: CUDA_EXECUTABLE_DEVICE_LINKER__SimplePathTracer_Debug CMakeFiles/SimplePathTracer.dir/main.cu.o CMakeFiles/SimplePathTracer.dir/Model/TrigModel.cu.o CMakeFiles/SimplePathTracer.dir/Renderer/VertexRenderer.cu.o CMakeFiles/SimplePathTracer.dir/Renderer/CameraFrame.cu.o CMakeFiles/SimplePathTracer.dir/Display/PixelDisplay.cu.o CMakeFiles/SimplePathTracer.dir/Renderer/UtilFunctions.cu.o CMakeFiles/SimplePathTracer.dir/Renderer/PhongShading.cu.o
-  LANGUAGE_COMPILE_FLAGS = --generate-code=arch=compute_86,code=[compute_86,sm_86]
-  LINK_LIBRARIES = -lglut -lGL -lGLEW -lcudadevrt -lcudart_static -lrt -lpthread -ldl
+build CMakeFiles/SimplePathTracer.dir/cmake_device_link.o: CUDA_EXECUTABLE_DEVICE_LINKER__SimplePathTracer_Debug CMakeFiles/SimplePathTracer.dir/main.cu.o CMakeFiles/SimplePathTracer.dir/Model/TrigModel.cu.o CMakeFiles/SimplePathTracer.dir/Renderer/VertexRenderer.cu.o CMakeFiles/SimplePathTracer.dir/Renderer/CameraFrame.cu.o CMakeFiles/SimplePathTracer.dir/Display/PixelDisplay.cu.o CMakeFiles/SimplePathTracer.dir/Renderer/UtilFunctions.cu.o CMakeFiles/SimplePathTracer.dir/Renderer/PhongShading.cu.o CMakeFiles/SimplePathTracer.dir/Renderer/Transform.cu.o
+  LANGUAGE_COMPILE_FLAGS = -g --generate-code=arch=compute_86,code=[compute_86,sm_86]
+  LINK_LIBRARIES = -lglfw3 -lglut -lX11 -lXrandr -lXi -lXxf86vm -lGL -lGLU -lGLEW -lcudnn -lcudadevrt -lcudart_static -lrt -lpthread -ldl
   OBJECT_DIR = CMakeFiles/SimplePathTracer.dir
   TARGET_FILE = CMakeFiles/SimplePathTracer.dir/cmake_device_link.o
 
@@ -112,9 +118,9 @@ build CMakeFiles/SimplePathTracer.dir/cmake_device_link.o: CUDA_EXECUTABLE_DEVIC
 #############################################
 # Link the executable SimplePathTracer
 
-build SimplePathTracer: CUDA_EXECUTABLE_LINKER__SimplePathTracer_Debug CMakeFiles/SimplePathTracer.dir/main.cu.o CMakeFiles/SimplePathTracer.dir/Model/TrigModel.cu.o CMakeFiles/SimplePathTracer.dir/Renderer/VertexRenderer.cu.o CMakeFiles/SimplePathTracer.dir/Renderer/CameraFrame.cu.o CMakeFiles/SimplePathTracer.dir/Display/PixelDisplay.cu.o CMakeFiles/SimplePathTracer.dir/Renderer/UtilFunctions.cu.o CMakeFiles/SimplePathTracer.dir/Renderer/PhongShading.cu.o CMakeFiles/SimplePathTracer.dir/cmake_device_link.o
-  FLAGS = --generate-code=arch=compute_86,code=[compute_86,sm_86]
-  LINK_LIBRARIES = -lglut  -lGL  -lGLEW  -lcudadevrt  -lcudart_static  -lrt  -lpthread  -ldl
+build SimplePathTracer: CUDA_EXECUTABLE_LINKER__SimplePathTracer_Debug CMakeFiles/SimplePathTracer.dir/main.cu.o CMakeFiles/SimplePathTracer.dir/Model/TrigModel.cu.o CMakeFiles/SimplePathTracer.dir/Renderer/VertexRenderer.cu.o CMakeFiles/SimplePathTracer.dir/Renderer/CameraFrame.cu.o CMakeFiles/SimplePathTracer.dir/Display/PixelDisplay.cu.o CMakeFiles/SimplePathTracer.dir/Renderer/UtilFunctions.cu.o CMakeFiles/SimplePathTracer.dir/Renderer/PhongShading.cu.o CMakeFiles/SimplePathTracer.dir/Renderer/Transform.cu.o CMakeFiles/SimplePathTracer.dir/cmake_device_link.o
+  FLAGS = -g --generate-code=arch=compute_86,code=[compute_86,sm_86]
+  LINK_LIBRARIES = -lglfw3  -lglut  -lX11  -lXrandr  -lXi  -lXxf86vm  -lGL  -lGLU  -lGLEW  -lcudnn  -lcudadevrt  -lcudart_static  -lrt  -lpthread  -ldl
   OBJECT_DIR = CMakeFiles/SimplePathTracer.dir
   POST_BUILD = :
   PRE_LINK = :
@@ -126,7 +132,7 @@ build SimplePathTracer: CUDA_EXECUTABLE_LINKER__SimplePathTracer_Debug CMakeFile
 # Utility command for edit_cache
 
 build CMakeFiles/edit_cache.util: CUSTOM_COMMAND
-  COMMAND = cd /home/dylan/CLionProjects/SimplePathTracer/cmake-build-debug && /home/dylan/Programs/clion-2022.3/bin/cmake/linux/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
+  COMMAND = cd /home/dylan/CLionProjects/SimplePathTracer/cmake-build-debug && /home/dylan/Documents/clion-2022.3.2/bin/cmake/linux/x64/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
   DESC = No interactive CMake dialog available...
   restat = 1
 
@@ -137,7 +143,7 @@ build edit_cache: phony CMakeFiles/edit_cache.util
 # Utility command for rebuild_cache
 
 build CMakeFiles/rebuild_cache.util: CUSTOM_COMMAND
-  COMMAND = cd /home/dylan/CLionProjects/SimplePathTracer/cmake-build-debug && /home/dylan/Programs/clion-2022.3/bin/cmake/linux/bin/cmake --regenerate-during-build -S/home/dylan/CLionProjects/SimplePathTracer -B/home/dylan/CLionProjects/SimplePathTracer/cmake-build-debug
+  COMMAND = cd /home/dylan/CLionProjects/SimplePathTracer/cmake-build-debug && /home/dylan/Documents/clion-2022.3.2/bin/cmake/linux/x64/bin/cmake --regenerate-during-build -S/home/dylan/CLionProjects/SimplePathTracer -B/home/dylan/CLionProjects/SimplePathTracer/cmake-build-debug
   DESC = Running CMake to regenerate build system...
   pool = console
   restat = 1
@@ -164,14 +170,14 @@ build all: phony SimplePathTracer
 #############################################
 # Re-run CMake if any of its inputs changed.
 
-build build.ninja: RERUN_CMAKE | /home/dylan/CLionProjects/SimplePathTracer/CMakeLists.txt /home/dylan/Programs/clion-2022.3/bin/cmake/linux/share/cmake-3.24/Modules/CMakeCUDAInformation.cmake /home/dylan/Programs/clion-2022.3/bin/cmake/linux/share/cmake-3.24/Modules/CMakeCXXInformation.cmake /home/dylan/Programs/clion-2022.3/bin/cmake/linux/share/cmake-3.24/Modules/CMakeCommonLanguageInclude.cmake /home/dylan/Programs/clion-2022.3/bin/cmake/linux/share/cmake-3.24/Modules/CMakeGenericSystem.cmake /home/dylan/Programs/clion-2022.3/bin/cmake/linux/share/cmake-3.24/Modules/CMakeInitializeConfigs.cmake /home/dylan/Programs/clion-2022.3/bin/cmake/linux/share/cmake-3.24/Modules/CMakeLanguageInformation.cmake /home/dylan/Programs/clion-2022.3/bin/cmake/linux/share/cmake-3.24/Modules/CMakeSystemSpecificInformation.cmake /home/dylan/Programs/clion-2022.3/bin/cmake/linux/share/cmake-3.24/Modules/CMakeSystemSpecificInitialize.cmake /home/dylan/Programs/clion-2022.3/bin/cmake/linux/share/cmake-3.24/Modules/Compiler/CMakeCommonCompilerMacros.cmake /home/dylan/Programs/clion-2022.3/bin/cmake/linux/share/cmake-3.24/Modules/Compiler/GNU-CXX.cmake /home/dylan/Programs/clion-2022.3/bin/cmake/linux/share/cmake-3.24/Modules/Compiler/GNU.cmake /home/dylan/Programs/clion-2022.3/bin/cmake/linux/share/cmake-3.24/Modules/Compiler/NVIDIA-CUDA.cmake /home/dylan/Programs/clion-2022.3/bin/cmake/linux/share/cmake-3.24/Modules/Platform/Linux-GNU-CXX.cmake /home/dylan/Programs/clion-2022.3/bin/cmake/linux/share/cmake-3.24/Modules/Platform/Linux-GNU.cmake /home/dylan/Programs/clion-2022.3/bin/cmake/linux/share/cmake-3.24/Modules/Platform/Linux.cmake /home/dylan/Programs/clion-2022.3/bin/cmake/linux/share/cmake-3.24/Modules/Platform/UnixPaths.cmake CMakeCache.txt CMakeFiles/3.24.2/CMakeCUDACompiler.cmake CMakeFiles/3.24.2/CMakeCXXCompiler.cmake CMakeFiles/3.24.2/CMakeSystem.cmake
+build build.ninja: RERUN_CMAKE | /home/dylan/CLionProjects/SimplePathTracer/CMakeLists.txt /home/dylan/Documents/clion-2022.3.2/bin/cmake/linux/x64/share/cmake-3.24/Modules/CMakeCUDAInformation.cmake /home/dylan/Documents/clion-2022.3.2/bin/cmake/linux/x64/share/cmake-3.24/Modules/CMakeCXXInformation.cmake /home/dylan/Documents/clion-2022.3.2/bin/cmake/linux/x64/share/cmake-3.24/Modules/CMakeCommonLanguageInclude.cmake /home/dylan/Documents/clion-2022.3.2/bin/cmake/linux/x64/share/cmake-3.24/Modules/CMakeGenericSystem.cmake /home/dylan/Documents/clion-2022.3.2/bin/cmake/linux/x64/share/cmake-3.24/Modules/CMakeInitializeConfigs.cmake /home/dylan/Documents/clion-2022.3.2/bin/cmake/linux/x64/share/cmake-3.24/Modules/CMakeLanguageInformation.cmake /home/dylan/Documents/clion-2022.3.2/bin/cmake/linux/x64/share/cmake-3.24/Modules/CMakeSystemSpecificInformation.cmake /home/dylan/Documents/clion-2022.3.2/bin/cmake/linux/x64/share/cmake-3.24/Modules/CMakeSystemSpecificInitialize.cmake /home/dylan/Documents/clion-2022.3.2/bin/cmake/linux/x64/share/cmake-3.24/Modules/Compiler/CMakeCommonCompilerMacros.cmake /home/dylan/Documents/clion-2022.3.2/bin/cmake/linux/x64/share/cmake-3.24/Modules/Compiler/GNU-CXX.cmake /home/dylan/Documents/clion-2022.3.2/bin/cmake/linux/x64/share/cmake-3.24/Modules/Compiler/GNU.cmake /home/dylan/Documents/clion-2022.3.2/bin/cmake/linux/x64/share/cmake-3.24/Modules/Compiler/NVIDIA-CUDA.cmake /home/dylan/Documents/clion-2022.3.2/bin/cmake/linux/x64/share/cmake-3.24/Modules/Platform/Linux-GNU-CXX.cmake /home/dylan/Documents/clion-2022.3.2/bin/cmake/linux/x64/share/cmake-3.24/Modules/Platform/Linux-GNU.cmake /home/dylan/Documents/clion-2022.3.2/bin/cmake/linux/x64/share/cmake-3.24/Modules/Platform/Linux.cmake /home/dylan/Documents/clion-2022.3.2/bin/cmake/linux/x64/share/cmake-3.24/Modules/Platform/UnixPaths.cmake CMakeCache.txt CMakeFiles/3.24.2/CMakeCUDACompiler.cmake CMakeFiles/3.24.2/CMakeCXXCompiler.cmake CMakeFiles/3.24.2/CMakeSystem.cmake
   pool = console
 
 
 #############################################
 # A missing CMake input file is not an error.
 
-build /home/dylan/CLionProjects/SimplePathTracer/CMakeLists.txt /home/dylan/Programs/clion-2022.3/bin/cmake/linux/share/cmake-3.24/Modules/CMakeCUDAInformation.cmake /home/dylan/Programs/clion-2022.3/bin/cmake/linux/share/cmake-3.24/Modules/CMakeCXXInformation.cmake /home/dylan/Programs/clion-2022.3/bin/cmake/linux/share/cmake-3.24/Modules/CMakeCommonLanguageInclude.cmake /home/dylan/Programs/clion-2022.3/bin/cmake/linux/share/cmake-3.24/Modules/CMakeGenericSystem.cmake /home/dylan/Programs/clion-2022.3/bin/cmake/linux/share/cmake-3.24/Modules/CMakeInitializeConfigs.cmake /home/dylan/Programs/clion-2022.3/bin/cmake/linux/share/cmake-3.24/Modules/CMakeLanguageInformation.cmake /home/dylan/Programs/clion-2022.3/bin/cmake/linux/share/cmake-3.24/Modules/CMakeSystemSpecificInformation.cmake /home/dylan/Programs/clion-2022.3/bin/cmake/linux/share/cmake-3.24/Modules/CMakeSystemSpecificInitialize.cmake /home/dylan/Programs/clion-2022.3/bin/cmake/linux/share/cmake-3.24/Modules/Compiler/CMakeCommonCompilerMacros.cmake /home/dylan/Programs/clion-2022.3/bin/cmake/linux/share/cmake-3.24/Modules/Compiler/GNU-CXX.cmake /home/dylan/Programs/clion-2022.3/bin/cmake/linux/share/cmake-3.24/Modules/Compiler/GNU.cmake /home/dylan/Programs/clion-2022.3/bin/cmake/linux/share/cmake-3.24/Modules/Compiler/NVIDIA-CUDA.cmake /home/dylan/Programs/clion-2022.3/bin/cmake/linux/share/cmake-3.24/Modules/Platform/Linux-GNU-CXX.cmake /home/dylan/Programs/clion-2022.3/bin/cmake/linux/share/cmake-3.24/Modules/Platform/Linux-GNU.cmake /home/dylan/Programs/clion-2022.3/bin/cmake/linux/share/cmake-3.24/Modules/Platform/Linux.cmake /home/dylan/Programs/clion-2022.3/bin/cmake/linux/share/cmake-3.24/Modules/Platform/UnixPaths.cmake CMakeCache.txt CMakeFiles/3.24.2/CMakeCUDACompiler.cmake CMakeFiles/3.24.2/CMakeCXXCompiler.cmake CMakeFiles/3.24.2/CMakeSystem.cmake: phony
+build /home/dylan/CLionProjects/SimplePathTracer/CMakeLists.txt /home/dylan/Documents/clion-2022.3.2/bin/cmake/linux/x64/share/cmake-3.24/Modules/CMakeCUDAInformation.cmake /home/dylan/Documents/clion-2022.3.2/bin/cmake/linux/x64/share/cmake-3.24/Modules/CMakeCXXInformation.cmake /home/dylan/Documents/clion-2022.3.2/bin/cmake/linux/x64/share/cmake-3.24/Modules/CMakeCommonLanguageInclude.cmake /home/dylan/Documents/clion-2022.3.2/bin/cmake/linux/x64/share/cmake-3.24/Modules/CMakeGenericSystem.cmake /home/dylan/Documents/clion-2022.3.2/bin/cmake/linux/x64/share/cmake-3.24/Modules/CMakeInitializeConfigs.cmake /home/dylan/Documents/clion-2022.3.2/bin/cmake/linux/x64/share/cmake-3.24/Modules/CMakeLanguageInformation.cmake /home/dylan/Documents/clion-2022.3.2/bin/cmake/linux/x64/share/cmake-3.24/Modules/CMakeSystemSpecificInformation.cmake /home/dylan/Documents/clion-2022.3.2/bin/cmake/linux/x64/share/cmake-3.24/Modules/CMakeSystemSpecificInitialize.cmake /home/dylan/Documents/clion-2022.3.2/bin/cmake/linux/x64/share/cmake-3.24/Modules/Compiler/CMakeCommonCompilerMacros.cmake /home/dylan/Documents/clion-2022.3.2/bin/cmake/linux/x64/share/cmake-3.24/Modules/Compiler/GNU-CXX.cmake /home/dylan/Documents/clion-2022.3.2/bin/cmake/linux/x64/share/cmake-3.24/Modules/Compiler/GNU.cmake /home/dylan/Documents/clion-2022.3.2/bin/cmake/linux/x64/share/cmake-3.24/Modules/Compiler/NVIDIA-CUDA.cmake /home/dylan/Documents/clion-2022.3.2/bin/cmake/linux/x64/share/cmake-3.24/Modules/Platform/Linux-GNU-CXX.cmake /home/dylan/Documents/clion-2022.3.2/bin/cmake/linux/x64/share/cmake-3.24/Modules/Platform/Linux-GNU.cmake /home/dylan/Documents/clion-2022.3.2/bin/cmake/linux/x64/share/cmake-3.24/Modules/Platform/Linux.cmake /home/dylan/Documents/clion-2022.3.2/bin/cmake/linux/x64/share/cmake-3.24/Modules/Platform/UnixPaths.cmake CMakeCache.txt CMakeFiles/3.24.2/CMakeCUDACompiler.cmake CMakeFiles/3.24.2/CMakeCXXCompiler.cmake CMakeFiles/3.24.2/CMakeSystem.cmake: phony
 
 
 #############################################

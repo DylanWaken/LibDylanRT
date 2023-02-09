@@ -30,9 +30,9 @@ add_executable(SimplePathTracer
         Display/PixelDisplay.cuh
         Renderer/UtilFunctions.cu
         Renderer/UtilFunctions.cuh
-        Renderer/PhongShading.cu Renderer/PhongShading.cuh)
+        Renderer/PhongShading.cu Renderer/PhongShading.cuh Renderer/Transform.cu Renderer/Transform.cuh)
 
-target_link_libraries(SimplePathTracer glut GL GLEW)
+target_link_libraries(SimplePathTracer glfw3 glut X11 Xrandr Xi Xxf86vm GL GLU GLEW cudnn)
 
 set_target_properties(SimplePathTracer PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON

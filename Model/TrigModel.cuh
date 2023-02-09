@@ -141,7 +141,12 @@ namespace dylanrt {
 
         //The vertices in Device memory
         float3* verticesD;
+        float3* screenVerticesD;
+        float3* screenSolvedD;
+        bool* inrangeD;
+
         float3* normalsD;
+
         triangle* trianglesD;
         material* materialsD;
 
