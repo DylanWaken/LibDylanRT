@@ -1,14 +1,14 @@
 cmake_minimum_required(VERSION 3.24)
 add_compile_options(-g -G)
 
-set(CMAKE_CUDA_ARCHITECTURES 86)
+set(CMAKE_CUDA_ARCHITECTURES 89)
 set(CMAKE_CUDA_COMPILER /usr/local/cuda/bin/nvcc)
 
 project(SimplePathTracer CUDA CXX)
 
 set(CMAKE_CUDA_STANDARD 17)
 set(CMAKE_CXX_STANDARD 17)
-add_compile_options(--keep -Xptxas -v)
+add_compile_options(--keep -Xptxas -v -ftz=true -prec-div=false -prec-sqrt=false)
 
 add_executable(SimplePathTracer
         main.cu
@@ -36,4 +36,4 @@ target_link_libraries(SimplePathTracer glfw3 glut X11 Xrandr Xi Xxf86vm GL GLU G
 
 set_target_properties(SimplePathTracer PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON
-        CMAKE_CUDA_ARCHITECTURES 86)
+        CMAKE_CUDA_ARCHITECTURES 89)

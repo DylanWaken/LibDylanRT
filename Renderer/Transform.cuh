@@ -13,7 +13,7 @@ namespace dylanrt {
  * We transform 3d model space vertices to 2d screen space vertices.
  */
 
-    void transform(float3* vertices, float3* screenVertices, float3* screenSolved, CameraFrame* cam, bool* inrange, int numVertices);
+    void transform(float3* vertices, float3* screenVertices, float3* screenSolved,CameraFrame* cam, bool* inrange, unsigned int numVertices);
 }
 
 #endif //SIMPLEPATHTRACER_TRANSFORM_CUH

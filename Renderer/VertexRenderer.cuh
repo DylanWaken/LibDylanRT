@@ -8,7 +8,8 @@
 #include "CameraFrame.cuh"
 #include "../Model/TrigModel.cuh"
 #include "UtilFunctions.cuh"
-
+#include "cuda.h"
+#include "math.h"
 
 namespace dylanrt {
 
@@ -65,6 +66,7 @@ namespace dylanrt {
 
         return make_float3(beta, gamma, t);
     }
+
 
     /**
      * whether the point of intersect is in range of the rectangle (or parallelogram)

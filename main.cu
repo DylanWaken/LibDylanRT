@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
 
     TrigModel model = TrigModel("/home/dylan/Documents/Resources/Models/car2/scene2.gltf");
     reorientModel(&model);
-//    model.buildTree();
+    model.buildTree();
 
     int resX =2560;
     int resY =1600;
@@ -46,13 +46,11 @@ int main(int argc, char** argv) {
     for(int i = 0; i < 100000; i++) {
         cam = path.getNextCamD();
 
-        cout << "Frame: " << i << endl;
 //        renderEdges(model.verticesD, model.trianglesD, model.numTriangles, cam, imageD, resX*resY);
+//        transform(model.verticesD, model.screenVerticesD, model.screenSolvedD, cam, model.inrangeD, model.numVertices);
 
-        transform(model.verticesD, model.screenVerticesD, model.screenSolvedD, cam, model.inrangeD, model.numVertices);
-
-//        phongShading(model.materialsD, model.trianglesD, model.verticesD, model.tree.nodesD,nullptr, model.tree.numNodes
-//        ,0,cam,imageD, resX*resY, make_float3(0,0,0));
+        phongShading(model.materialsD, model.trianglesD, model.verticesD, model.tree.nodesD,nullptr, model.tree.numNodes
+        ,0,cam,imageD, resX*resY, make_float3(0,0,0));
         cout<<"Frame: "<<i<<endl;
         createImage(imageD, pixelsD, resX, resY);
         glutMainLoopEvent();
