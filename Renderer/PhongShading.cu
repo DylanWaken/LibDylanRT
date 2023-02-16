@@ -8,7 +8,7 @@
 
 #define AABB_PREFETCHED_LAYER_SIZE (1+ 2 + 4 + 8 + 16 + 32 + 64 + 128 + 256 + 512)
 #define AABB_PREFETCHED_LAYERS 11
-#define AABB_SEARCH_STACK_DEPTH 63
+#define AABB_SEARCH_STACK_DEPTH 24
 
 namespace dylanrt {
 
@@ -42,7 +42,7 @@ namespace dylanrt {
     }
 
     __device__ __forceinline__ solvedParams findIntersect(float3 e, float3 d, float3 invD, AABBnode* nodeShared, AABBnode* nodes,
-                                                    triangle* trigs, float3* vertices){
+                                                          triangle* trigs, float3* vertices){
         //register of node indices:
         unsigned int nodeIndices[AABB_SEARCH_STACK_DEPTH];
         int nodeIndicesTop = 0;
@@ -108,9 +108,9 @@ namespace dylanrt {
 
     template<const int BM>
     __launch_bounds__(BM, 2)
-    __global__ void phongShadingD(material* materials, triangle* trigs, float3* vertices, AABBnode* nodes, pointLight* lights,
-                                  unsigned int numNodes, unsigned int numLights, CameraFrame* cameraFrame,float* imagePlane,
-                                  unsigned int numPixls, float3 ambientLight){
+    __global__ void phongShadingDepthD(material* materials, triangle* trigs, float3* vertices, AABBnode* nodes, pointLight* lights,
+                                       unsigned int numNodes, unsigned int numLights, CameraFrame* cameraFrame, float* imagePlane,
+                                       unsigned int numPixls, float3 ambientLight){
 
         unsigned int tid = threadIdx.x;
         unsigned int bid = blockIdx.x;
@@ -168,6 +168,102 @@ namespace dylanrt {
         }
     }
 
+    template<const int PIXEL_PER_BLOCK>
+    __global__ void phongShadingParaD(material* materials, triangle* trigs, float3* vertices, AABBnode* nodes, pointLight* lights,
+                                      unsigned int numNodes, unsigned int numLights, CameraFrame* cameraFrame, float* imagePlane,
+                                      unsigned int numPixls, float3 ambientLight){
+
+        unsigned const int tid = threadIdx.x;
+        unsigned const int bid = blockIdx.x;
+
+        unsigned const int warpId = tid / 32;
+        unsigned const int laneId = tid % 32;
+
+        unsigned const int begIndex = numPixls / gridDim.x * bid;
+        unsigned const int endIndex = gridDim.x == blockIdx.x + 1 ? numPixls : numPixls / gridDim.x * (bid + 1);
+
+        __shared__ float directions[PIXEL_PER_BLOCK][3];
+        __shared__ float invDirections[PIXEL_PER_BLOCK][3];
+        __shared__ float solved[PIXEL_PER_BLOCK][3];
+
+        //[pixel_ID ... | Node_access_request ...]
+        extern __shared__ unsigned int stackData[];
+
+        //shared memory for image plane, we can save registers by storing the image plane in shared memory
+        __shared__ float imgTopLeft[3];
+        __shared__ float imgTopRight[3];
+        __shared__ float imgBottomLeft[3];
+        __shared__ float eyePos[3];
+        __shared__ unsigned int resolution[2];
+        __shared__ unsigned int stackPtr[1];
+
+        //read the camera frame
+        if (tid == 0){
+            imgTopRight[0] = cameraFrame->imgTopRight.x;
+            imgTopRight[1] = cameraFrame->imgTopRight.y;
+            imgTopRight[2] = cameraFrame->imgTopRight.z;
+
+            imgTopLeft[0] = cameraFrame->imgTopLeft.x;
+            imgTopLeft[1] = cameraFrame->imgTopLeft.y;
+            imgTopLeft[2] = cameraFrame->imgTopLeft.z;
+
+            imgBottomLeft[0] = cameraFrame->imgBottomLeft.x;
+            imgBottomLeft[1] = cameraFrame->imgBottomLeft.y;
+            imgBottomLeft[2] = cameraFrame->imgBottomLeft.z;
+
+            eyePos[0] = cameraFrame->positionE.x;
+            eyePos[1] = cameraFrame->positionE.y;
+            eyePos[2] = cameraFrame->positionE.z;
+
+            resolution[0] = cameraFrame->resolutionX;
+            resolution[1] = cameraFrame->resolutionY;
+        }
+        __syncthreads();
+
+        //start main loop
+        #pragma unroll
+        for (auto i = begIndex; i < endIndex; i+=PIXEL_PER_BLOCK){
+            //precompute direction and invDirection
+            if(tid < PIXEL_PER_BLOCK){
+                //calculate pixel location
+                float x = (i + tid)%resolution[0];
+                float y = (i + tid)/resolution[0];
+
+                //calculate the direction of the ray
+                float picX = imgTopLeft[0] + (x) * ((imgTopRight[0] - imgTopLeft[0])/resolution[0]) + (y) * ((imgBottomLeft[0] - imgTopLeft[0])/resolution[1]);
+                float picY = imgTopLeft[1] + (x) * ((imgTopRight[1] - imgTopLeft[1])/resolution[0]) + (y) * ((imgBottomLeft[1] - imgTopLeft[1])/resolution[1]);
+                float picZ = imgTopLeft[2] + (x) * ((imgTopRight[2] - imgTopLeft[2])/resolution[0]) + (y) * ((imgBottomLeft[2] - imgTopLeft[2])/resolution[1]);
+
+                //solve for ray direction
+                float dX = picX - eyePos[0];
+                float dY = picY - eyePos[1];
+                float dZ = picZ - eyePos[2];
+
+                directions[tid][0] = dX;
+                directions[tid][1] = dY;
+                directions[tid][2] = dZ;
+
+                invDirections[tid][0] = 1.0f/dX;
+                invDirections[tid][1] = 1.0f/dY;
+                invDirections[tid][2] = 1.0f/dZ;
+
+                //assign pixel requests
+                stackData[tid] = tid;
+                //assign requests for the root node
+                stackData[PIXEL_PER_BLOCK * AABB_SEARCH_STACK_DEPTH + tid] = 0;
+                stackPtr[0] = PIXEL_PER_BLOCK;
+            }
+
+            __syncthreads();
+
+            //start looped search
+            # pragma unroll
+            while(stackPtr[0] > 0){
+
+            }
+        }
+    }
+
     void phongShading(material* materials, triangle* trigs, float3* vertices, AABBnode* nodes, pointLight* lights,
                       unsigned int numNodes, unsigned int numLights, CameraFrame* cameraFrame,float* imagePlane,
                       unsigned int numPixls, float3 ambientLight){
@@ -175,9 +271,9 @@ namespace dylanrt {
         unsigned int gridSize = (numPixls/4 + blockSize - 1) / blockSize;
         auto t1 = std::chrono::high_resolution_clock::now();
 
-        phongShadingD<512><<<gridSize, blockSize>>>(materials, trigs, vertices, nodes,
-                                                    lights, numNodes, numLights, cameraFrame, imagePlane,
-                                                    numPixls, ambientLight);
+        phongShadingDepthD < 512 ><<<gridSize, blockSize>>>(materials, trigs, vertices, nodes,
+                lights, numNodes, numLights, cameraFrame, imagePlane,
+                numPixls, ambientLight);
 
         cudaDeviceSynchronize();
         auto t2 = std::chrono::high_resolution_clock::now();
