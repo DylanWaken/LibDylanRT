@@ -191,7 +191,7 @@ namespace dylanrt {
     template<const int PIXEL_PER_BLOCK>
     __global__ void phongShadingParaD(material* materials, triangle* trigs, float3* vertices, AABBnode* nodes, pointLight* lights,
                                       unsigned int numNodes, unsigned int numLights, CameraFrame* cameraFrame, float* imagePlane,
-                                      unsigned int numPixls, float3 ambientLight){
+                                      unsigned int numPixls, float3 ambientLight, int* DBG){
 
         unsigned const int tid = threadIdx.x;
         unsigned const int bid = blockIdx.x;
@@ -219,6 +219,7 @@ namespace dylanrt {
         __shared__ unsigned int resolution[2];
         __shared__ int stackPtrPending[1];
         __shared__ int stackPtrProc[1];
+        __shared__ bool continueExecution[1];
 
         //read the camera frame
         if (tid == 0){
@@ -244,10 +245,13 @@ namespace dylanrt {
         __syncthreads();
 
         //start main loop
+        int querySize = 0;
         #pragma unroll
         for (auto i = begIndex; i < endIndex; i+=PIXEL_PER_BLOCK){
+
+            querySize = i + PIXEL_PER_BLOCK < endIndex ? PIXEL_PER_BLOCK : endIndex - i;
             //precompute direction and invDirection
-            if(tid < PIXEL_PER_BLOCK){
+            if(tid < querySize){
                 //calculate pixel location
                 float x = (i + tid)%resolution[0];
                 float y = (i + tid)/resolution[0];
@@ -262,6 +266,7 @@ namespace dylanrt {
                 float dY = picY - eyePos[1];
                 float dZ = picZ - eyePos[2];
 
+                //sth
                 directions[tid][0] = dX;
                 directions[tid][1] = dY;
                 directions[tid][2] = dZ;
@@ -286,96 +291,42 @@ namespace dylanrt {
 
             __syncthreads();
 
-            //start the first compute iteration
-            int queued = 0;
-            #pragma unroll
-            while((queued = stackPtrPending[0] - stackPtrProc[0]) > 0){
-
-                int readIndex = 0;
-                //warp operation:
-                if(laneId == 0){
-                    readIndex = atomicAdd(stackPtrProc, min(queued, WARP_SIZE)) - min(queued, WARP_SIZE);
-                }
-                //get read index
-                readIndex = __shfl_sync(0xffffffff, readIndex, 0) + (int)laneId;
-
-                if(tid < queued) {
-
-                    //compute the memory access index of this thread
-                    readIndex = tid < queued ? (readIndex + tid) % BUFFER_SIZE : 0;
-
-                    //get the pixel ID
-                    unsigned int pixelID = stackData[readIndex];
-                    //get the node ID
-                    unsigned int nodeID = stackData[readIndex + BUFFER_SIZE];
-
-                    //compute AABB intersection
-                    bool intersect = rayBoxIntersect(nodes[nodeID].maxPoint.x, nodes[nodeID].maxPoint.y, nodes[nodeID].maxPoint.z,
-                                                     nodes[nodeID].minPoint.x, nodes[nodeID].minPoint.y, nodes[nodeID].minPoint.z,
-                                                     eyePos[0], eyePos[1], eyePos[2],
-                                                     invDirections[pixelID][0], invDirections[pixelID][1], invDirections[pixelID][2]);
-
-                    bool isLeaf = nodes[nodeID].isLeaf;
-                    //is leaf
-                    if(intersect && isLeaf){
-                        //TODO : solve trig intersection...
-                    }
-
-                    //if the ray intersects, we add the children to the stack
-                    int outputs = (intersect && !isLeaf) * 2;
-                    int writeIndex = 0;
-
-                    unsigned int leftChild = nodes[nodeID].left;
-                    unsigned int rightChild = nodes[nodeID].right;
-
-                    //reduce over all the outputs to get the write index and the total number of outputs
-                    #pragma unroll
-                    for(auto m = 0; m < tid; m++){
-                        writeIndex += __shfl_sync(0xffffffff, outputs, m);
-                    }
-
-                    int writeIndexSrc = 0;
-
-                    //cache write
-                    //warp operation:
-                    if((laneId == WARP_SIZE - 1 || laneId == queued - 1)){
-                        writeIndexSrc = atomicAdd(stackPtrPending, writeIndex) - writeIndex;
-                    }
-
-                    if (intersect && !isLeaf){
-                        //get write index
-                        writeIndexSrc = __shfl_sync(0xffffffff, writeIndexSrc,
-                                                    queued < WARP_SIZE ? queued - 1 : WARP_SIZE - 1);
-                        //write the left child
-                        stackData[writeIndexSrc + writeIndex - outputs] = pixelID;
-                        stackData[writeIndexSrc + writeIndex - outputs + BUFFER_SIZE] = leftChild;
-                        //write the right child
-                        stackData[writeIndexSrc + writeIndex + 1 - outputs] = pixelID;
-                        stackData[writeIndexSrc + writeIndex + 1 - outputs + BUFFER_SIZE] = rightChild;
-                    }
-                }
-            }
-
             //more processing on the pixels ...
-
-
         }
     }
 
     void phongShading(material* materials, triangle* trigs, float3* vertices, AABBnode* nodes, pointLight* lights,
                       unsigned int numNodes, unsigned int numLights, CameraFrame* cameraFrame,float* imagePlane,
                       unsigned int numPixls, float3 ambientLight){
-        unsigned int blockSize = 512;
+        unsigned int blockSize = 256;
         unsigned int gridSize = (numPixls/4 + blockSize - 1) / blockSize;
         auto t1 = std::chrono::high_resolution_clock::now();
 
-        phongShadingDepthD < 512 ><<<gridSize, blockSize>>>(materials, trigs, vertices, nodes,
+        int* readIndex;
+        cudaMalloc(&readIndex, sizeof(int) * 256);
+        cudaMemset(readIndex, 0, sizeof(int) * 256);
+
+        cudaFuncSetAttribute(phongShadingParaD< 256>, cudaFuncAttributeMaxDynamicSharedMemorySize,
+                             (AABB_SEARCH_STACK_DEPTH * 256 * 2) * sizeof(unsigned int));
+
+        phongShadingParaD< 256><<<gridSize, blockSize,
+        (AABB_SEARCH_STACK_DEPTH * 256 * 2) * sizeof(unsigned int)>>>(materials, trigs, vertices, nodes,
                 lights, numNodes, numLights, cameraFrame, imagePlane,
-                numPixls, ambientLight);
+                numPixls, ambientLight, readIndex);
 
         cudaDeviceSynchronize();
         auto t2 = std::chrono::high_resolution_clock::now();
         std::cout << "Time taken: " << std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count() << "ms" << std::endl;
-        assertCudaError();
+//        assertCudaError();
+
+        int* readIndexHost;
+        cudaMallocHost(&readIndexHost, sizeof(int) * 256);
+        cudaMemcpy(readIndexHost, readIndex, sizeof(int) * 256, cudaMemcpyDeviceToHost);
+
+        for(int i = 0; i < 256; i++){
+            std::cout << readIndexHost[i] << ",";
+        }
+        std::cout << std::endl;
+        exit(0);
     }
 } // dylanrt
